@@ -17,14 +17,14 @@ and the editor).
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] `create` and `editText` normalise identically; the Task model, ingress validation and sync are untouched
-- [ ] Card text renders with `white-space: pre-line` on both profiles
-- [ ] The editor is a textarea holding the full text; Enter rules follow `(pointer: fine)` live; blur commits; Escape cancels and restores
-- [ ] Ctrl+H is ignored when the event target is the editor textarea inside an `li`, still honoured from the capture bar
-- [ ] The media-query hook replaces the two hand-written subscriptions in the screen root with no behaviour change (existing dark-chrome and breakpoint suites stay green)
-- [ ] Both pointer profiles, both colour schemes; whole suite green; `tsc -b` clean
+- [x] `create` and `editText` normalise identically; the Task model, ingress validation and sync are untouched
+- [x] Card text renders with `white-space: pre-line` on both profiles
+- [x] The editor is a textarea holding the full text; Enter rules follow `(pointer: fine)` live; blur commits; Escape cancels and restores
+- [x] Ctrl+H is ignored when the event target is the editor textarea inside an `li`, still honoured from the capture bar
+- [x] The media-query hook replaces the two hand-written subscriptions in the screen root with no behaviour change (existing dark-chrome and breakpoint suites stay green)
+- [x] Both pointer profiles, both colour schemes; whole suite green; `tsc -b` clean
 
 ## Test Case Matrix
 
@@ -78,3 +78,15 @@ and declared styles.
 
 Error cases: `matchMedia` absent (`stubNoMatchMedia`) must not throw; the hook returns
 `false` and the editor behaves as coarse.
+
+## Comments
+
+### Cycle 01 — 2026-09-04
+
+PTMR cycle: handoff `01-to-plan-01.md` (return `02`), base `main` (`8b85714`), Traycer branch
+`traycer/soft-sparrow`. Commits TEST `fe82c13`, MAKE `bf39a00`, READ `e48e04d`, master nit
+`16d8046`. Validated by master: 245/245, `tsc -b`, browser under fine (1280px) and coarse
+(mobile emulation); details in `ledger.md` cycle 01. Branch
+`feat/01-line-breaks-store-card-editor`, PR #20 (the user merges). Ticket `complete`; tickets
+02, 03 and 04 are unblocked — their cycles base on `feat/01-…` until the merge, then rebase
+onto `main`.
