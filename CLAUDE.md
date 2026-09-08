@@ -3,6 +3,9 @@
 Antes de tocar no repo, leia `docs/agents/orchestration.md`: gates (testes, typecheck,
 build), branches e as especificidades do código que nenhum teste adivinha.
 
+O fluxo de trabalho — um ticket por vez, três etapas disparadas à mão — está na
+tabela em `AGENTS.md`; o detalhe de cada etapa neste repo está em `orchestration.md`.
+
 Commits e PRs seguem Conventional Commits e referenciam o ID do ticket no assunto
 (`feat(pill): ... (SLIP-31)`).
 

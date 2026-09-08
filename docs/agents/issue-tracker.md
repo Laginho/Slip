@@ -20,6 +20,8 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - The ID is an address, not a description: it never encodes the ticket type. Type lives in an editable `Type:` line so it can change without breaking a single reference
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings), with a `Type:` line beside it using the Conventional Commits vocabulary (`feat`/`fix`/`docs`/`chore`/`refactor`) — the same words the commit messages use
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
+- A `Blocked by: SLIP-<N>, SLIP-<N>` line near the top names the tickets that must be `complete` first
+- Closing history per feature lives in `.scratch/<feature-slug>/ledger.md`, one row per closed ticket, appended in the same commit that sets `**Status:** complete`
 - Commits and PRs reference the ID in the subject (`feat(pill): ... (SLIP-31)`) so `git log --grep=SLIP-31` recovers the history of any ticket
 
 Ticket files created before this convention keep their old per-feature `NN-` numbering; they were

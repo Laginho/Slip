@@ -72,41 +72,56 @@ Run from the repo root of the checkout under test:
   between a `margin` shorthand and `marginLeft`-style longhands across renders (React warns,
   the transition conflicts). `LIST`/`WALL` in `TaskList.tsx` use longhands on both branches.
 
-## Solo TDD with cross-model review (from ticket 04 on)
+## The per-ticket flow, bound to this repo
 
-One implementing session does red and green as separate commits with the `Role:` trailers,
-validates in the browser and opens the PR; a reviewer of another vendor reads the red commit
-against the matrix, every later test edit, the green against the spec, and runs the app for
-layout tickets. Rules learnt on PR #23:
+`AGENTS.md` holds the three-step table. What each step means in this checkout:
 
-- The reviewer **reports, never commits**. Findings go back to the implementing session;
-  the reviewer's corrections got no independent review before merge.
-- A known spec violation blocks the PR. Disclosing it in the description is not stopping.
-- Ticket and spec edits are tracker commits on `main` by the user or the spec author,
-  before the correction, never inside the PR by the implementer.
-- Master duties before the PR: re-run every gate in the worktree, diff against the Design,
-  browser pass for visual tickets at 1280px light and 390px dark.
-- After the merge the master closes the ticket in `.scratch/`: `Status: complete` plus the
-  closing note naming the PR.
+**Step 1 — spec and tickets.** Tracker files are committed straight to `main` by the user
+or the spec author. They are never written inside an implementation PR by the implementer:
+when a ticket or a spec turns out to be wrong, the fix lands on `main` first, and only then
+does step 2 restart from it.
+
+**Step 2 — implement.** Work in `.claude/worktrees/<slug>/` on `claude/<slug>`, branched
+from `origin/main` after a fetch, pushed as `feat/<slug>`. Two kinds of commit, in order:
+
+- the red commit: test files only. Run the suite and record the failure count in the PR
+  description — red for the reason the ticket's matrix names, never from a typo.
+- green commits: no edit to a test file. If a committed test turns out to be wrong, stop —
+  `**Status:** blocked`, the reason under `## Comments`, back to the human. Nobody fixes a
+  neighbour's test in silence.
+
+`git diff --stat` across those two commits is the whole guard; no second agent is watching.
+Before opening the PR: every gate re-run inside the worktree, a diff against `DESIGN.md`,
+and for a visual ticket a browser pass at 1280px light and 390px dark producing
+**measurements** against the ticket's outcome sentences. jsdom verifies no line clamp, no
+column count and no margin — PR #23's three defects all passed the suite.
+
+A known spec violation blocks the PR. Disclosing it in the description is not stopping.
+
+**Step 3 — review.** A session that did not implement, running `code-review` over Standards
+and Spec: the red commit against the matrix, every later test edit, the green against the
+spec, and the running app for a layout ticket. The reviewer may commit small corrections;
+anything larger reopens the ticket and returns it to step 2. Closing is an item of the PR,
+not a follow-up — `**Status:** complete`, the closing note naming the PR, and the ledger
+row, in one commit on the PR branch. Five tickets once closed in git and not in the tracker
+because closing was left for afterwards.
+
+Merge is the human's, always: straight through when step 3 committed nothing, otherwise the
+PR waits for a read.
 
 ## Records
 
-- Ledger: `.scratch/<feature-slug>/ledger.md` — committed, one row per cycle, **written
-  only by the master on the feature's docs branch after validation**. Cycle branches never
-  create or edit it: in Leva 1a four parallel cycles each created their own copy, producing
-  add/add conflicts on every pair and duplicate cycle numbers.
+- Ledger: `.scratch/<feature-slug>/ledger.md`, created lazily on the feature's first close.
+  New features use `| Date | Ticket | Commit |`; the ledgers written under the retired PTMR
+  loop keep their own columns. The reviewer appends the row in the closing commit of step 3.
 - The PR description is the record of what was validated in the browser; the ledger row
   points at it and names the models that did the work.
-- Created lazily on the first cycle of a feature.
 
-## Parallel work on one feature
+## One ticket at a time
 
-- Tickets run in parallel only when their file sets are disjoint. When two tickets will
-  edit the same file, the later one lists the earlier one under `Blocked by:` —
-  integration blocking is real blocking, even when the spec does not depend on it
-  (Leva 1a: ticket 03 edits every file 01 and 04 touch, so it is blocked by both).
-- After every merge into `main`, rebase every open branch onto it and re-run the gates
-  before starting the next cycle on it. The browser validation of a visual ticket happens
-  on the merged state, never on an isolated branch.
-- One master session per feature. A second master repeats the numbering and ledger
-  collisions above.
+The unit is one ticket, spec to merge. Batching is what let a wrong plan cross three
+sessions before anyone stopped it.
+
+`Blocked by: SLIP-<N>, SLIP-<N>` stays, and stays honest: a later ticket that will edit a
+file an earlier one touches lists it, even when the spec has no dependency between them.
+It records the order to work in — not a licence to run two tickets at once.
