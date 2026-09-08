@@ -7,7 +7,7 @@ binds what that skill leaves repo-specific.
 
 Local markdown tracker — see `docs/agents/issue-tracker.md` for the full conventions.
 In short: one feature per `.scratch/<feature-slug>/` directory, spec at `spec.md`,
-tickets at `issues/<NN>-<slug>.md`.
+tickets at `issues/SLIP-<N>-<slug>.md`, where `SLIP-<N>` is unique across the whole repo.
 
 ## Branches
 
