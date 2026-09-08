@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { TransitionEvent as ReactTransitionEvent } from "react";
 import type { Task } from "../store";
+import { useMediaQuery } from "../useMediaQuery";
 import { CARD, INK_ON_DARK, INK_ON_LIGHT, OVERDUE_RED } from "../palette";
 import { daysOverdue, formatDeadline, urgencyOf } from "../urgency";
 
@@ -48,6 +49,10 @@ import { daysOverdue, formatDeadline, urgencyOf } from "../urgency";
  * here mutates a Task directly -- that would skip the updatedAt stamp and break sync.
  */
 
+/** The standard legacy-flexbox line clamp; the only way to clamp with an ellipsis. */
+const clamp = (lines: number) =>
+  ({ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: String(lines), overflow: "hidden" }) as const;
+
 /** Deliberate distance, not a flick: an accidental delete is the failure mode here. */
 const SWIPE_PX = 72;
 /** Past this, a press is an intent to edit rather than a tap. */
@@ -78,8 +83,9 @@ type Props = {
   /**
    * The screen's breakpoint, owned by App. `false` is the phone (<900px): the cartoon
    * bubble -- left-aligned, capped at 86%, radius 6px/16px/16px/16px, Deadline printed
-   * as its own "vence dd/mm" meta line. `true` is the desktop wall (>=900px): square
-   * radius 10, uncapped, compact inline "dd/mm". Only the look differs; gestures,
+   * as its own "vence dd/mm" meta line. `true` is the desktop wall (>=900px): a square
+   * post-it: text scaled to the square and clamped at eight lines, Deadline bottom-left,
+   * controls top-right. Only the look differs; gestures,
    * buttons, editing, swipe and keyboard are identical in both.
    */
   wide: boolean;
@@ -101,7 +107,16 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
   // half of a double-tap land on Apagar. This gates ONLY the hover half of the reveal:
   // rendering, Tab focusability and focus-driven reveal stay unconditional, so a
   // keyboard attached to a tablet still reaches every action.
-  const canHover = window.matchMedia("(hover: hover)").matches;
+  // Absent matchMedia (unstubbed jsdom) there is no hover capability to read:
+  // treat it as no-hover rather than throwing, the touch-device profile.
+  const canHover =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(hover: hover)").matches;
+
+  // Enter commits only where a fine pointer makes a single-line commit gesture
+  // unambiguous; under a coarse pointer Enter always inserts a break. Live, so
+  // a pointer flip mid-edit takes effect on the next keypress.
+  const fine = useMediaQuery("(pointer: fine)");
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(task.text);
@@ -114,8 +129,8 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
   const pendingTap = useRef<number | undefined>(undefined);
   const suppressClick = useRef(false);
 
-  /** The in-place edit input, and the control keyboard commits hand focus back to. */
-  const editInput = useRef<HTMLInputElement>(null);
+  /** The in-place edit textarea, and the control keyboard commits hand focus back to. */
+  const editInput = useRef<HTMLTextAreaElement>(null);
   const editarButton = useRef<HTMLButtonElement>(null);
   /** Set when a commit leaves the input holding focus; consumed by the effect below. */
   const wantsFocusBack = useRef(false);
@@ -135,10 +150,10 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
     [],
   );
 
-  // Leaving edit mode unmounts the focused input, and browsers do not reliably deliver
+  // Leaving edit mode unmounts the focused textarea, and browsers do not reliably deliver
   // focusout for a removed node -- without this reset the three controls can stick
   // revealed on that one Card with nothing actually focused inside it. When a commit
-  // came from the keyboard (input still focused), hand focus to the Card's own controls
+  // came from the keyboard (textarea still focused), hand focus to the Card's own controls
   // instead of dropping it on <body>; run after render so the button exists to focus.
   useEffect(() => {
     if (!editing && wantsFocusBack.current) {
@@ -152,9 +167,9 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
     setEditing(true);
   };
 
-  /** Leave edit mode, clearing any focus-within the unmounting input leaves behind. */
+  /** Leave edit mode, clearing any focus-within the unmounting textarea leaves behind. */
   const finishEditing = () => {
-    // A keyboard commit still holds focus in the input; remember that so the effect
+    // A keyboard commit still holds focus in the textarea; remember that so the effect
     // above can return it. A blur commit must not steal focus back -- focus already
     // moved where the user sent it.
     wantsFocusBack.current = document.activeElement === editInput.current;
@@ -302,7 +317,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
     // own Enter/Space activation and any pointer use after reveal keep working.
     pointerEvents: revealActions ? "auto" : "none",
     padding: "0 2px",
-    fontSize: 18,
+    fontSize: bubble ? 18 : "7.5cqw",
     lineHeight: 1,
     minWidth: 44,
     minHeight: 44,
@@ -314,8 +329,9 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
     cursor: revealActions ? "pointer" : "default",
   } as const;
 
-  // The three native buttons, reused as-is: direct children of the row on the wall,
-  // wrapped in their own trailing row inside the bubble's column.
+  // The three native buttons, reused as-is: absolutely positioned in the top-right
+  // corner of the square on the wall, wrapped in their own trailing row inside the
+  // bubble's column.
   const actions = (
     <>
       <button
@@ -379,6 +395,14 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
       onFocus={() => setFocusedWithin(true)}
       onBlur={() => setFocusedWithin(false)}
       style={{
+        ...(bubble
+          ? {}
+          : {
+              position: "relative",
+              containerType: "inline-size",
+              aspectRatio: "1 / 1",
+              overflow: "hidden",
+            }),
         listStyle: "none",
         background: CARD[task.kind][urgency],
         color: ink,
@@ -386,8 +410,8 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
         borderRadius: bubble ? "6px 16px 16px 16px" : 10,
         padding: bubble ? "10px 14px" : "16px 18px",
         display: "flex",
-        flexDirection: bubble ? "column" : "row",
-        alignItems: bubble ? "flex-start" : "baseline",
+        flexDirection: "column",
+        alignItems: bubble ? "flex-start" : "stretch",
         gap: bubble ? 4 : 10,
         transform,
         transition,
@@ -397,16 +421,41 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
         userSelect: editing ? "auto" : "none",
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 18, lineHeight: 1.5 }}>
+      <span
+        style={
+          bubble
+            ? {
+                flex: 1,
+                minWidth: 0,
+                fontSize: 18,
+                lineHeight: 1.5,
+                whiteSpace: "pre-line",
+                ...(editing ? {} : clamp(6)),
+              }
+            : {
+                // A growing clamp box paints lines below the eighth-line ellipsis.
+                flex: editing ? 1 : "0 1 auto",
+                minWidth: 0,
+                minHeight: 0,
+                fontSize: "6.67cqw",
+                lineHeight: 1.3,
+                whiteSpace: "pre-line",
+                paddingRight: revealActions && !editing ? 80 : 0,
+                ...(editing ? { display: "flex" } : clamp(8)),
+              }
+        }
+      >
         {editing ? (
-          <input
+          <textarea
             ref={editInput}
             autoFocus
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onBlur={commitEdit}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (event.key === "Enter" && !event.shiftKey && fine) {
+                // Fine pointer: Enter commits. Everywhere else the browser
+                // inserts the break -- Shift+Enter, or any Enter under coarse.
                 event.preventDefault();
                 commitEdit();
               }
@@ -417,14 +466,17 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
               }
             }}
             aria-label="Task"
+            rows={Math.max(1, draft.split("\n").length)}
             style={{
               width: "100%",
+              ...(bubble ? {} : { flex: 1, minHeight: 0, overflowY: "auto" }),
               font: "inherit",
               color: "inherit",
               background: "transparent",
               border: "none",
               outline: "none",
               padding: 0,
+              resize: "none",
             }}
           />
         ) : (
@@ -447,7 +499,8 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
         <span
           style={{
             flex: "none",
-            fontSize: bubble ? 13 : 14,
+            ...(bubble ? {} : { alignSelf: "flex-start", marginTop: "auto" }),
+            fontSize: bubble ? 13 : "5.8cqw",
             opacity: 0.75,
             fontVariantNumeric: "tabular-nums",
           }}
@@ -459,7 +512,14 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
       {/* Native controls for all three actions, always rendered -- keyboard and
           touch-keyboard users cannot be gated behind a fine-pointer media query.
           Hover or focus-within reveals them; gestures remain the shortcuts. */}
-      {!editing && (bubble ? <div style={{ display: "flex", gap: 4, alignSelf: "flex-end" }}>{actions}</div> : actions)}
+      {!editing &&
+        (bubble ? (
+          <div style={{ display: "flex", gap: 4, alignSelf: "flex-end" }}>{actions}</div>
+        ) : (
+          <div style={{ position: "absolute", top: 16, right: 18, display: "flex", gap: 10 }}>
+            {actions}
+          </div>
+        ))}
     </li>
   );
 }

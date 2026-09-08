@@ -81,12 +81,8 @@ Error cases: `matchMedia` absent (`stubNoMatchMedia`) must not throw; the hook r
 
 ## Comments
 
-### Cycle 01 — 2026-09-04
-
-PTMR cycle: handoff `01-to-plan-01.md` (return `02`), base `main` (`8b85714`), Traycer branch
-`traycer/soft-sparrow`. Commits TEST `fe82c13`, MAKE `bf39a00`, READ `e48e04d`, master nit
-`16d8046`. Validated by master: 245/245, `tsc -b`, browser under fine (1280px) and coarse
-(mobile emulation); details in `ledger.md` cycle 01. Branch
-`feat/01-line-breaks-store-card-editor`, PR #20 (the user merges). Ticket `complete`; tickets
-02, 03 and 04 are unblocked — their cycles base on `feat/01-…` until the merge, then rebase
-onto `main`.
+- 2026-09-04 (master): cycle 01 — clean. TEST `fe82c13` (big pickle), MAKE `bf39a00` (muse
+  spark 1.3 free), READ `e48e04d` (mimo v2.5 free), master nit `16d8046` (`Role: MASTER`:
+  the hook's stub-shaped `addEventListener` guard dropped, two Card stubs moved to
+  `stubMediaWithChangeListener`). Suite 245/245, `tsc -b` clean. Browser validation recorded
+  in PR #20's description. Merged as PR #20 (`824743a`). Ledger: `../ledger.md`, cycle 01.

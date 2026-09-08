@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CHROME } from "./palette";
+import { useMediaQuery } from "./useMediaQuery";
 import { useSession } from "./useSession";
 import { archive } from "./store";
 import { ARCHIVE_ROW_HEIGHT, Archive } from "./components/Archive";
@@ -8,7 +9,7 @@ import { TaskList } from "./components/TaskList";
 import { UndoToast } from "./components/UndoToast";
 
 /**
- * The single screen. One scrolling list, one input pinned to the bottom.
+ * The single screen. One scrolling list, one pill floating at the bottom.
  * No router, no tabs, no nav bar: the Archive (issue 08) is a section, not a route.
  * The scrolling region and the content are two elements: the region scrolls while
  * the content declares the extra height that keeps the list pullable.
@@ -45,8 +46,8 @@ export function App() {
       if (!event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) return;
       if (event.key.toLowerCase() !== "h") return;
       const target = event.target;
-      // A Card's in-place editor: the only <input> that lives inside an <li>.
-      if (target instanceof HTMLInputElement && target.closest("li") !== null) return;
+      // A Card's in-place editor: the only <textarea> that lives inside an <li>.
+      if (target instanceof HTMLTextAreaElement && target.closest("li") !== null) return;
       if (!hasArchive) return; // nothing to show: leave the browser's Ctrl+H alone
       event.preventDefault();
       setArchiveOpen((o) => !o);
@@ -56,28 +57,16 @@ export function App() {
   }, [hasArchive]);
 
   /**
-   * The one layout breakpoint. Inline styles cannot express a media query, so the
-   * screen asks once and reacts to changes live -- a desktop window being resized,
+   * Layout breakpoints. Inline styles cannot express a media query, so the
+   * screen reacts to changes live -- a desktop window being resized,
    * a phone rotated. Like `now` below, it is owned here and handed down: TaskList
    * stays presentational, choosing between the phone column and the post-it wall.
    */
-  const [wide, setWide] = useState(() => window.matchMedia("(min-width: 900px)").matches);
+  const wide = useMediaQuery("(min-width: 900px)");
+  // Four columns from 1136px of available width plus the main's two 16px gutters.
+  const fourColumns = useMediaQuery("(min-width: 1168px)");
 
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 900px)");
-    const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  const [dark, setDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = (event: MediaQueryListEvent) => setDark(event.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const dark = useMediaQuery("(prefers-color-scheme: dark)");
 
   /**
    * One clock for the whole screen, refreshed on focus, on visibilitychange, and at each
@@ -163,6 +152,7 @@ export function App() {
             tasks={tasks}
             now={now}
             wide={wide}
+            wallColumns={fourColumns ? 4 : 3}
             onComplete={complete}
             onDelete={discard}
             onEdit={edit}
@@ -170,7 +160,7 @@ export function App() {
         </main>
       </div>
 
-      <CaptureBar wide={wide} onCapture={capture} />
+      <CaptureBar onCapture={capture} />
 
       {/*
         One fixed layer for every notification -- undo toast and save-error banner.
