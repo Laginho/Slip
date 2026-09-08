@@ -14,7 +14,7 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
   ls .scratch/*/issues/ | grep -o '<KEY>-[0-9]*' | sort -V | tail -1
   ```
 
-- The ID is an address, not a description: it never encodes the ticket type. A type baked into the ID goes stale the moment a bug turns out to be a docs fix, and fixing it would mean renaming a file already referenced from commits, ledgers and handoffs. Type lives in an editable `Type:` line instead
+- The ID is an address, not a description: it never encodes the ticket type. A type baked into the ID goes stale the moment a bug turns out to be a docs fix, and fixing it would mean renaming a file already referenced from commits. Type lives in an editable `Type:` line instead
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings), with a `Type:` line beside it using the Conventional Commits vocabulary (`feat`/`fix`/`docs`/`chore`/`refactor`) — the same words the commit messages use
 - Commits and PRs reference the ID in the subject (`feat(scope): ... (<KEY>-31)`) so `git log --grep=<KEY>-31` recovers the history of any ticket
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading

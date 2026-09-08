@@ -23,7 +23,7 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - Commits and PRs reference the ID in the subject (`feat(pill): ... (SLIP-31)`) so `git log --grep=SLIP-31` recovers the history of any ticket
 
 Ticket files created before this convention keep their old per-feature `NN-` numbering; they were
-not renumbered, because their IDs are already frozen into merged commits, ledgers and handoffs.
+not renumbered, because their IDs are already frozen into merged commits.
 
 A ticket file starts like this:
 
