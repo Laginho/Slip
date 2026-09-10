@@ -24,13 +24,10 @@ export function task(over: Partial<Task> & Pick<Task, "id">): Task {
   };
 }
 
-/**
- * jsdom has no matchMedia. Every query reports "no match" -- the touch-device profile --
- * which is exactly the configuration the keyboard controls must not depend on.
- */
-export function stubNoMatchMedia(): void {
+/** Installs a static matchMedia stub for the queries selected by `matches`. */
+export function stubMedia(matches: (query: string) => boolean): void {
   vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: false,
+    matches: matches(query),
     media: query,
     onchange: null,
     addEventListener: () => undefined,
@@ -39,48 +36,28 @@ export function stubNoMatchMedia(): void {
     removeListener: () => undefined,
     dispatchEvent: () => false,
   }));
+}
+
+/** jsdom's touch-device profile: no query matches. */
+export function stubNoMatchMedia(): void {
+  stubMedia(() => false);
 }
 
 export function stubDesktopMedia(): void {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query === "(min-width: 900px)",
-    media: query,
-    onchange: null,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-    addListener: () => undefined,
-    removeListener: () => undefined,
-    dispatchEvent: () => false,
-  }));
+  stubMedia((query) => query === "(min-width: 900px)");
 }
 
 export function stubDarkMedia(): void {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query === "(prefers-color-scheme: dark)",
-    media: query,
-    onchange: null,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-    addListener: () => undefined,
-    removeListener: () => undefined,
-    dispatchEvent: () => false,
-  }));
+  stubMedia((query) => query === "(prefers-color-scheme: dark)");
 }
 
 export function stubDarkDesktopMedia(): void {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches:
+  stubMedia(
+    (query) =>
       query === "(prefers-color-scheme: dark)" ||
       query === "(min-width: 900px)" ||
       query === "(pointer: fine)",
-    media: query,
-    onchange: null,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-    addListener: () => undefined,
-    removeListener: () => undefined,
-    dispatchEvent: () => false,
-  }));
+  );
 }
 
 /**

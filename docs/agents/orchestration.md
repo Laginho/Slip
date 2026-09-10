@@ -29,7 +29,7 @@ Run from the repo root of the checkout under test:
   present). Run gates inside the cycle's worktree, or `npx vitest run --dir src` from the
   main checkout.
 - Typecheck: `npx tsc -b` (strict, `noUnusedLocals` — unused imports fail the gate)
-- Lint: none configured. `tsc -b` is the only static gate; do not invent a lint step.
+- Lint: `npm run lint` (eslint, `react-hooks` rules as errors, `--max-warnings=0`)
 - Build (when a cycle touches build config or the PWA shell): `npm run build`
 
 ## Repo specifics

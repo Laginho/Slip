@@ -77,9 +77,10 @@ export function CaptureBar({ onCapture }: Props) {
   const popupRef = useRef<HTMLDivElement>(null);
 
   const fine = useMediaQuery("(pointer: fine)");
+  const initialFine = useRef(fine);
 
   useEffect(() => {
-    if (fine) textRef.current?.focus();
+    if (initialFine.current) textRef.current?.focus();
   }, []);
 
   // Anything pressed outside the pop-up and its dot closes it -- including the textarea,
@@ -114,6 +115,7 @@ export function CaptureBar({ onCapture }: Props) {
     if (blank) return;
     const deadline =
       dayStr === "" ? null : inferDeadline(Number(dayStr), new Date());
+    if (dayStr !== "" && deadline === null) return;
     // Clearing the fields *is* the success signal: when storage refused the write the
     // input keeps text, kind and deadline exactly as typed, so a retry costs nothing.
     if (!onCapture(text, kind, deadline)) return;
@@ -230,7 +232,11 @@ export function CaptureBar({ onCapture }: Props) {
         value={dayStr}
         onChange={(event) => {
           const raw = event.target.value;
-          if (/^\d{0,2}$/.test(raw)) setDayStr(raw);
+          // Shape *and* range: a day past 31 can never become a Deadline, so it is
+          // refused at the keystroke instead of being accepted and then silently
+          // dropped on send. 0 still passes -- it is the first keystroke of "03" --
+          // and capture() refuses it there.
+          if (/^\d{0,2}$/.test(raw) && Number(raw) <= 31) setDayStr(raw);
         }}
         aria-label="prazo"
         placeholder="dd"

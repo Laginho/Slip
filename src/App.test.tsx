@@ -991,6 +991,19 @@ describe("pull to reveal the Archive", () => {
     }
   });
 
+  it("first completion hides the newly-created Archive row without moving the Open list", async () => {
+    seedStorage([task({ id: "o1", text: "comprar leite" })]);
+    const container = await render(<App />);
+    const main = container.querySelector("main")!;
+    const region = main.parentElement as HTMLElement;
+
+    await activate(queryLabel(container, "Concluir")!);
+
+    expect(main.textContent).toContain("ver concluídas");
+    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
+    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+  });
+
   it("row 10 — 2 Open, 1 Done: main.children[0] is Archive row, main.children.length === 2 (ticket-04 shape intact)", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
@@ -1757,6 +1770,34 @@ describe("the capture pill (ticket 02)", () => {
     expect(dot.textContent).toBe("T");
     expect((dot.firstElementChild as HTMLElement).style.background).toBe(toRgb(CARD.work.light));
     expect(document.activeElement).toBe(field);
+  });
+
+  it("never accepts a day past 31 into the field", async () => {
+    const container = await render(<App />);
+    const prazo = queryLabel(container, "prazo") as HTMLInputElement;
+
+    typeInto(prazo, "3");
+    expect(prazo.value).toBe("3");
+    // The second keystroke would make 32: refused, leaving the digit already accepted.
+    typeInto(prazo, "32");
+    expect(prazo.value).toBe("3");
+  });
+
+  it("refuses a day of 0 on send and keeps the capture intact", async () => {
+    const container = await render(<App />);
+    const field = fieldOf(container);
+    const prazo = queryLabel(container, "prazo") as HTMLInputElement;
+    typeInto(field, "renovar seguro");
+    // 0 has to reach the field -- it is the first keystroke of "03" -- so capture()
+    // is the one that refuses it.
+    typeInto(prazo, "0");
+
+    await click(sendOf(container));
+
+    expect(container.querySelector("li")).toBeNull();
+    expect(field.value).toBe("renovar seguro");
+    expect(prazo.value).toBe("0");
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("row 23 — blank lines are normalised through the real path", async () => {

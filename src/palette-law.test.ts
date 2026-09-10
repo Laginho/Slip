@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DARK CHROME — matrix rows 8–11.
  * Structural assertions on the palette module: the CHROME object shape, the SURFACE

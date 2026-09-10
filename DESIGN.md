@@ -21,6 +21,11 @@ colors:
   chore-light: "#cfe6f7"
   chore-medium: "#4b99d2"
   chore-dark: "#275a86"
+  dark-surface: "#1c1b19"
+  dark-capture-bg: "#262523"
+  dark-text-primary: "#f2f0ec"
+  dark-text-quiet: "#a8a49e"
+  dark-hairline: "#3a3835"
 typography:
   body:
     fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
@@ -88,6 +93,14 @@ no theme toggle; the chrome follows the system colour scheme; the nine Card swat
 - **Hairline** (`hairline #e2e0dc`): the single border colour in the product.
 - **Toast charcoal** (`toast-bg #2b2a28`) with **toast ivory** (`toast-ink #f7f6f4`):
   undo toasts and save-error banners only.
+
+### Dark chrome
+- **Dark warm paper** (`dark-surface #1c1b19`) and **dark capture ground**
+  (`dark-capture-bg #262523`): the system-dark chrome; Cards keep their fixed swatches.
+- **Dark ink** (`dark-text-primary #f2f0ec`), **dark quiet grey**
+  (`dark-text-quiet #a8a49e`), and **dark hairline** (`dark-hairline #3a3835`): text and
+  dividers on dark chrome.
+- **Dark toast**: the light toast pair is reversed (`#f7f6f4` ground, `#2b2a28` ink).
 
 ### Signal
 - **Overdue red** (`overdue-red #ff7a68`): the "N dias atrasado" label on dark cards.

@@ -329,6 +329,15 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
     cursor: revealActions ? "pointer" : "default",
   } as const;
 
+  function runAction(event: React.MouseEvent<HTMLButtonElement>, action: () => void): void {
+    event.stopPropagation();
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    action();
+  }
+
   // The three native buttons, reused as-is: absolutely positioned in the top-right
   // corner of the square on the wall, wrapped in their own trailing row inside the
   // bubble's column.
@@ -337,14 +346,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
       <button
         type="button"
         aria-label="Concluir"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (suppressClick.current) {
-            suppressClick.current = false;
-            return;
-          }
-          onComplete(task);
-        }}
+        onClick={(event) => runAction(event, () => onComplete(task))}
         style={actionStyle}
       >
         ✓
@@ -353,14 +355,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
         ref={editarButton}
         type="button"
         aria-label="Editar"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (suppressClick.current) {
-            suppressClick.current = false;
-            return;
-          }
-          beginEdit();
-        }}
+        onClick={(event) => runAction(event, beginEdit)}
         style={actionStyle}
       >
         ✎
@@ -368,14 +363,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
       <button
         type="button"
         aria-label="Apagar"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (suppressClick.current) {
-            suppressClick.current = false;
-            return;
-          }
-          onDelete(task);
-        }}
+        onClick={(event) => runAction(event, () => onDelete(task))}
         style={actionStyle}
       >
         ×

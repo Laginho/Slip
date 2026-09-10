@@ -8,3 +8,7 @@ dev-dist/
 .impeccable/
 .opencode/
 .scratch/**/handoffs/
+# Transient review artifacts; the live tracker remains documented in docs/agents/issue-tracker.md.
+tracker/handoffs/
+tracker/check-report.md
+tracker/pr-23-review.md

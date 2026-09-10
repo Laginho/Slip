@@ -9,7 +9,6 @@ import {
   openTasks,
   remove,
   restore,
-  setDeadline,
   setDone,
 } from "./store";
 
@@ -178,7 +177,6 @@ describe("mutations", () => {
     // evaluating them all up front would leave only the last one's blob in storage.
     const cases: Array<[string, (tasks: Task[]) => Task[]]> = [
       ["editText", (tasks) => editText(tasks, "a", "novo texto")],
-      ["setDeadline", (tasks) => setDeadline(tasks, "a", "2026-09-01")],
       ["setDone", (tasks) => setDone(tasks, "a", true)],
       ["remove", (tasks) => remove(tasks, "a")],
     ];
@@ -196,8 +194,6 @@ describe("mutations", () => {
   it("applies the intended field change", () => {
     const start = [task({ id: "a" })];
     expect(editText(start, "a", "outro")[0].text).toBe("outro");
-    expect(setDeadline(start, "a", "2026-09-01")[0].deadline).toBe("2026-09-01");
-    expect(setDeadline(start, "a", null)[0].deadline).toBeNull();
     expect(setDone(start, "a", true)[0].done).toBe(true);
   });
 
@@ -446,31 +442,6 @@ describe("deadline domain closure", () => {
     expect(load()).toEqual(next);
   });
 
-  it("setDeadline ignores an invalid deadline entirely: no write, no restamp", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(1000);
-
-    for (const deadline of INVALID) {
-      localStorage.clear();
-      const start = [task({ id: "a", deadline: "2026-09-01", updatedAt: 5 })];
-
-      const next = setDeadline(start, "a", deadline);
-
-      // The existing valid state is kept as-is -- not erased in favour of null.
-      expect(next, deadline).toEqual(start);
-      // A no-op does not touch storage either.
-      expect(load(), deadline).toEqual([]);
-    }
-  });
-
-  it("setDeadline accepts a real leap day and round-trips it", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(1000);
-
-    const next = setDeadline([task({ id: "a" })], "a", "2028-02-29");
-    expect(next[0].deadline).toBe("2028-02-29");
-    expect(load()).toEqual(next);
-  });
 });
 
 describe("openTasks", () => {

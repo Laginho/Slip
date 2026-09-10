@@ -73,7 +73,7 @@ function isRealDate(deadline: string): boolean {
 
 /**
  * The one Deadline predicate. Used on ingress (toTask) *and* on every mutation that sets
- * a Deadline (create, setDeadline), which is what closes the domain: a Task this module
+ * a Deadline (create), which is what closes the domain: a Task this module
  * writes is always a Task toTask() reads back. Before, only the read side checked --
  * create() would happily persist 2026-02-30, and load() would drop that whole Task on
  * the next launch.
@@ -231,15 +231,6 @@ export function editText(tasks: Task[], id: string, text: string): Task[] {
   // Clearing the text during an in-place edit is not a delete. Keep what was there.
   if (trimmed === "") return tasks;
   return apply(tasks, id, (task) => ({ ...task, text: trimmed }));
-}
-
-export function setDeadline(tasks: Task[], id: string, deadline: string | null): Task[] {
-  // An invalid deadline is a no-op, not a write: persisting it would leave a Task the
-  // next load() silently drops. Unlike create() there is an existing valid state to
-  // keep, so keeping it beats normalizing to null (which would erase a real deadline
-  // because of one bad input).
-  if (deadline !== null && !isDeadline(deadline)) return tasks;
-  return apply(tasks, id, (task) => ({ ...task, deadline }));
 }
 
 export function setDone(tasks: Task[], id: string, done: boolean): Task[] {

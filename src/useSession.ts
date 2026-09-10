@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   create,
   editText,
@@ -48,10 +48,10 @@ export function useSession() {
   const syncTimer = useRef<number | undefined>(undefined);
 
   /** The list has changed and storage already knows. Show it. */
-  const adopt = (next: Task[]) => {
+  const adopt = useCallback((next: Task[]) => {
     latest.current = next;
     setTasks(next);
-  };
+  }, []);
 
   /**
    * Set when a local write could not be persisted. Deliberately persistent: unlike the
@@ -78,14 +78,14 @@ export function useSession() {
    * Safari's private mode, where setItem throws -- nothing is adopted: storage is
    * authoritative, so the UI must not claim to hold something that was not stored.
    */
-  const settle = (result: Task[]) => {
+  const settle = useCallback((result: Task[]) => {
     try {
       adopt(persist(merge(latest.current, result)));
     } catch {
       // Nothing to say to the user and nothing to retry. The local list is intact and
       // the next successful sync sends it again.
     }
-  };
+  }, [adopt]);
 
   /**
    * A round trip, fired and forgotten. Never awaited by anything the user is waiting for,
@@ -93,12 +93,12 @@ export function useSession() {
    * the next success. sync() resolves with the snapshot itself when it could not do
    * anything -- unconfigured, offline, a bad response -- and there is nothing to settle.
    */
-  const roundTrip = () => {
+  const roundTrip = useCallback(() => {
     const snapshot = latest.current;
     void sync(snapshot).then((result) => {
       if (result !== snapshot) settle(result);
     });
-  };
+  }, [settle]);
 
   /**
    * A local change: run the store operation inside the catch boundary, land the result,
@@ -121,7 +121,7 @@ export function useSession() {
       return false;
     }
     // Every store path that actually writes goes through persist(), which returns a new
-    // list; a no-op (blank Capture/edit text, an invalid setDeadline) hands back the
+    // list; a no-op (blank Capture/edit text) hands back the
     // same array untouched. Such a call never touched storage, so it must neither clear
     // saveError -- a false all-clear while the banner is up -- nor arm a sync for data
     // that did not change. It still reports success, so harmless follow-ups (a no-op
@@ -140,10 +140,10 @@ export function useSession() {
    * Sync now, folding in any debounced round trip still pending: roundTrip() reads the
    * latest list, so the pending timer would only repeat what goes out here.
    */
-  const syncNow = () => {
+  const syncNow = useCallback(() => {
     window.clearTimeout(syncTimer.current);
     roundTrip();
-  };
+  }, [roundTrip]);
 
   useEffect(() => {
     roundTrip();
@@ -162,7 +162,7 @@ export function useSession() {
       window.removeEventListener("online", syncNow);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [roundTrip, syncNow]);
 
   // Every destructive action is applied immediately and offers a way back, rather than
   // being held for five seconds. That is what makes "a second action replaces the
