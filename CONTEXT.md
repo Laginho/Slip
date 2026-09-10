@@ -46,13 +46,12 @@ How close a Task's Deadline is, expressed as the intensity of its Card's colour.
 Always derived, never chosen by the user.
 _Avoid_: Priority, importance, severity
 
-**Position**:
-Where a Task sits among its peers, read left-to-right, top-to-bottom. Peers are the
-Tasks sharing its Deadline, or every dateless Task when it has none. A new Task takes
-the last place among its peers; on the desktop the user may drag it to another. Dated
-Tasks always come before dateless ones, nearest Deadline first, and a Task never moves
-between Deadlines.
-_Avoid_: Order, rank, index, sort key
+**Display order**:
+The derived sequence of Open Tasks: dated Tasks come first by nearest Deadline, with
+Work, College, then Chore for a shared Deadline; dateless Tasks follow. Tasks tied within
+one of those groups retain each device's current list sequence, so their sequence is not
+guaranteed to match across devices after synchronization.
+_Avoid_: Position, rank, index, sort key
 
 **Archive**:
 Every Task the user has ever marked Done. Kept forever; only the most recent week is

@@ -1,7 +1,8 @@
-// @ts-nocheck
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
+import os from "node:os";
 
 const root = process.cwd();
 
@@ -147,7 +148,6 @@ describe("publish — GitHub Pages + PWA + sync (RED local)", () => {
   it("nenhum valor real de credencial no repo e .env.local não é criado", () => {
     // .env.local pode existir pós-provisionamento, mas deve estar git-ignored; nunca leia seu conteúdo
     if (exists(".env.local")) {
-      const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
       const res = spawnSync("git", ["check-ignore", "-q", ".env.local"], { cwd: root });
       expect(res.status, ".env.local existe mas deve estar git-ignored (git check-ignore -q .env.local deve sair 0)").toBe(0);
     }
@@ -180,7 +180,6 @@ describe("fixup 06 — segurança local wizard/workflow/schema (RED)", () => {
   }
 
   function mkTempWithFullStubs(): { tmp: string; bin: string; ghLog: string; openLog: string } {
-    const os = require("node:os") as typeof import("node:os");
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wizard-fixup-"));
     const bin = path.join(tmp, "bin");
     fs.mkdirSync(bin, { recursive: true });
@@ -223,7 +222,6 @@ exit 0`;
     input: string,
     opts: { cwd: string; bin: string; ghLog: string; extraEnv?: Record<string, string> },
   ) {
-    const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
     const binUnix = toUnix(opts.bin);
     const origPath = process.env.PATH || "";
     const origUnix = origPath
@@ -236,7 +234,7 @@ exit 0`;
       PATH: binUnix + ":" + origUnix,
       GH_LOG: ghLogUnix,
       ...opts.extraEnv,
-    } as NodeJS.ProcessEnv;
+    };
     const res = spawnSync(bashPath, [wizardAbs], {
       input,
       cwd: opts.cwd,
@@ -244,7 +242,7 @@ exit 0`;
       encoding: "utf-8",
       timeout: 8000,
     });
-    return res as { status: number | null; stdout: string; stderr: string };
+    return res;
   }
 
   const synthUrl = "https://synthetic.invalid.test.supabase.co";
@@ -377,7 +375,7 @@ exit 0`;
     const { tmp, bin, ghLog } = mkTempWithGhStub();
     try {
       const input = ["", "", "y", synthUrl, synthPublishable].join("\n") + "\n";
-      const res = runWizard(input, { cwd: tmp, bin, ghLog, extraEnv: { ENV_FILE: ".env" } });
+      runWizard(input, { cwd: tmp, bin, ghLog, extraEnv: { ENV_FILE: ".env" } });
       // se o wizard respeitar ENV_FILE herdado, falhará este assert (RED)
       // o correto é ignorar ENV_FILE e sempre usar .env.local
       const envLocal = path.join(tmp, ".env.local");
@@ -432,9 +430,8 @@ exit 0`;
 
   it("secret list GitHub não foi tocada (nenhuma simulação lista secrets reais)", () => {
     // guardrail: nenhuma das simulações deve ter chamado `gh secret list`; .env.local pode existir mas deve estar git-ignored/não staged
-    const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
     const res = spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf-8" });
-    const out = typeof res.stdout === "string" ? res.stdout : (res.stdout as unknown as Buffer)?.toString?.() ?? "";
+    const out = res.stdout ?? "";
     expect(out, "git status --porcelain não deve listar .env.local (deve estar git-ignored/não staged)").not.toContain(".env.local");
   });
 });
@@ -449,7 +446,6 @@ describe("fixup 06 — modo sem navegador (RED)", () => {
   }
 
   function mkTempWithFullStubs2(): { tmp: string; bin: string; ghLog: string; openLog: string } {
-    const os = require("node:os") as typeof import("node:os");
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wizard-no-browser-"));
     const bin = path.join(tmp, "bin");
     fs.mkdirSync(bin, { recursive: true });
@@ -485,14 +481,13 @@ exit 0`;
     input: string,
     opts: { cwd: string; bin: string; ghLog: string },
   ) {
-    const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
     const binUnix = toUnix2(opts.bin);
     const origPath = process.env.PATH || "";
     const origUnix = origPath.split(path.delimiter).map((p) => toUnix2(p)).join(":");
     const ghLogUnix = toUnix2(opts.ghLog);
-    const env = { ...process.env, PATH: binUnix + ":" + origUnix, GH_LOG: ghLogUnix } as NodeJS.ProcessEnv;
+    const env = { ...process.env, PATH: binUnix + ":" + origUnix, GH_LOG: ghLogUnix };
     const res = spawnSync(bashPath2, [wizardAbs2], { input, cwd: opts.cwd, env, encoding: "utf-8", timeout: 8000 });
-    return res as { status: number | null; stdout: string; stderr: string };
+    return res;
   }
 
   const synthUrl2 = "https://synthetic.invalid.test.supabase.co";

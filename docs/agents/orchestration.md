@@ -50,7 +50,7 @@ Run from the repo root of the checkout under test:
   present). Run gates inside the cycle's worktree, or `npx vitest run --dir src` from the
   main checkout.
 - Typecheck: `npx tsc -b` (strict, `noUnusedLocals` — unused imports fail the gate)
-- Lint: none configured. `tsc -b` is the only static gate; do not invent a lint step.
+- Lint: `npm run lint`
 - Build (when a cycle touches build config or the PWA shell): `npm run build`
 
 ## PTMR paths
@@ -99,10 +99,11 @@ Run from the repo root of the checkout under test:
   between a `margin` shorthand and `marginLeft`-style longhands across renders (React warns,
   the transition conflicts). `LIST`/`WALL` in `TaskList.tsx` use longhands on both branches.
 
-## Solo TDD with cross-model review (from ticket 04 on)
+## Solo TDD with cross-model review
 
-The Leva 1b tickets after 03 do not run PTMR. One implementing session (Sonnet for the
-trial, Opus if a red fails the reviewer) does red and green as separate commits with the
+Unless the user requests a PTMR cycle, an implementation ticket uses solo TDD with
+cross-model review. One implementing session (Sonnet for the trial, Opus if a red fails the
+reviewer) does red and green as separate commits with the
 `Role:` trailers, validates in the browser and opens the PR; a reviewer of another vendor
 reads the red commit against the matrix, every later test edit, the green against the spec,
 and runs the app for layout tickets. Rules learnt on PR #23:

@@ -39,7 +39,7 @@ export function App() {
   useEffect(() => {
     if (!hasArchive) return;
     scrollRegionTo(archiveOpen ? 0 : ARCHIVE_HIDDEN_OFFSET);
-  }, [archiveOpen]);
+  }, [archiveOpen, hasArchive]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
