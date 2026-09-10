@@ -31,3 +31,8 @@ and the remediation record states the real numbers.
   claim, and a `beforeAll` Vite build racing Vitest's 10s hook timeout); all five are
   fixed in the same branch. Gates re-run: 13 files, 305 tests, `tsc --noEmit`, lint,
   build.
+- 2026-09-10 — Step-3 review (PR #25) re-ran all four gates and verified every finding
+  closed and every coverage claim (App 110, Card 58, publish 18→12 by consolidation).
+  Two documentation corrections committed by the reviewer: DESIGN.md's wall Task text is
+  `6.67cqw`, not a flat 16px, and the remediation record said 1,000 lines where the rule
+  applied was 800.

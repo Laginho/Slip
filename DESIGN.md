@@ -120,8 +120,9 @@ user rules on it; bold weight carries it meanwhile.
 sans-serif`) — native feel, zero webfont cost.
 
 ### Hierarchy
-- **Task text** (400): 16px/1.3 on the wall and 18px/1.5 in the phone bubble.
-  Inputs remain at least 16px to stop iOS zooming a focused field.
+- **Task text** (400): `6.67cqw`/1.3 on the wall — it scales with the square Card, about
+  16px at the 3-column width — and 18px/1.5 in the phone bubble. Inputs remain at least
+  16px to stop iOS zooming a focused field.
 - **Meta/label** (700 bold for "desfazer" and overdue labels; 13–14px for the Kind
   pop-up, toasts, archive rows): quiet support, underlined when tappable.
 
