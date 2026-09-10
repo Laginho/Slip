@@ -88,7 +88,7 @@ describe("dark palette law", () => {
     ).toHaveLength(0);
   });
 
-  it("11 — CARD, INK_ON_LIGHT, INK_ON_DARK, OVERDUE_RED are untouched exports", async () => {
+  it("11 — every frozen palette value is unchanged", async () => {
     const palette = await import("./palette");
 
     expect(palette.CARD).toBeDefined();
@@ -103,5 +103,25 @@ describe("dark palette law", () => {
     expect(palette.CARD.work.light).toBe("#f9d4c8");
     expect(palette.CARD.work.medium).toBe("#e3683e");
     expect(palette.CARD.work.dark).toBe("#973e20");
+    expect(palette.CARD.college.light).toBe("#faebc2");
+    expect(palette.CARD.college.medium).toBe("#e7ba51");
+    expect(palette.CARD.college.dark).toBe("#9d6607");
+    expect(palette.CARD.chore.light).toBe("#cfe6f7");
+    expect(palette.CARD.chore.medium).toBe("#4b99d2");
+    expect(palette.CARD.chore.dark).toBe("#275a86");
+    expect(palette.CHROME.light.surface).toBe("#f5f4f2");
+    expect(palette.CHROME.light.captureBg).toBe("#ffffff");
+    expect(palette.CHROME.light.textPrimary).toBe("#1a1a1a");
+    expect(palette.CHROME.light.textQuiet).toBe("#8a8783");
+    expect(palette.CHROME.light.hairline).toBe("#e2e0dc");
+    expect(palette.CHROME.light.toastBg).toBe("#2b2a28");
+    expect(palette.CHROME.light.toastInk).toBe("#f7f6f4");
+    expect(palette.CHROME.dark.surface).toBe("#1c1b19");
+    expect(palette.CHROME.dark.captureBg).toBe("#262523");
+    expect(palette.CHROME.dark.textPrimary).toBe("#f2f0ec");
+    expect(palette.CHROME.dark.textQuiet).toBe("#a8a49e");
+    expect(palette.CHROME.dark.hairline).toBe("#3a3835");
+    expect(palette.CHROME.dark.toastBg).toBe("#f7f6f4");
+    expect(palette.CHROME.dark.toastInk).toBe("#2b2a28");
   });
 });

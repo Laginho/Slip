@@ -57,5 +57,6 @@ export default defineConfig({
   ],
   test: {
     environment: "jsdom",
+    dir: "src",
   },
 });

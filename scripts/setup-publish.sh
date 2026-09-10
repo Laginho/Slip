@@ -236,7 +236,7 @@ guard_key() {
   fi
 }
 
-banner "Ticket 06: Supabase project + Data API credentials"
+banner "Slip: Supabase project + Data API credentials"
 
 # ── Stage 1: create the project and apply supabase/schema.sql ─────────────
 stage "Supabase: create project + apply schema"
@@ -276,3 +276,5 @@ set_secret VITE_SUPABASE_ANON_KEY "$VITE_SUPABASE_ANON_KEY"
 # ──────────────────────────────────────────────────────────────────────────
 
 finish
+
+

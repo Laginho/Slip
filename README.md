@@ -32,5 +32,6 @@ npm run build
 
 GitHub Actions deploys GitHub Pages after a push to `main` (or when run manually). Before
 the build can deploy, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as GitHub
-Actions secrets. The workflow runs the test suite, lint, typecheck, and production build before
-publishing `dist`.
+Actions secrets. Run `bash scripts/setup-publish.sh` for a guided local and GitHub setup.
+The workflow runs a dependency audit, the test suite, lint, typecheck, and production build
+before publishing `dist`.

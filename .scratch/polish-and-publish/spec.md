@@ -11,9 +11,8 @@ everything not changed here. Domain vocabulary: `CONTEXT.md`. Sync design: ADR 0
 The app works, but daily use surfaced three frictions and a missing step:
 
 1. Every undo toast appears **in the document flow** between the list and the capture
-   bar. Because the list is bottom-anchored, each complete/delete shoves the whole list
-   upward by the toast's height and yanks it back five seconds later. Reading the list
-   while acting on it is impossible.
+   bar. Because it participates in layout, each complete/delete shifts the list and
+   yanks it back five seconds later. Reading the list while acting on it is impossible.
 2. Capture asks for a **full date** (day, month, year) for the Deadline. Tasks never
    reach further than about a month out; typing a year is meaningless friction.
 3. On the computer the app is a 620px phone column centred on a landscape monitor — a

@@ -20,8 +20,8 @@ type Props = {
   now: Date;
   /**
    * The screen's layout breakpoint, owned by App (inline styles cannot carry a media
-   * query). False is the phone: a single bottom-anchored column, byte-for-byte as it
-   * has always been. True turns each section into the post-it wall: a responsive
+   * query). False is the phone: a single column at the top of the scrollable list.
+   * True turns each section into the post-it wall: a responsive
    * grid across the full width, square Cards. Reading order is unchanged -- grid
    * auto-placement fills left-to-right,
    * top-to-bottom, and the dateless section still follows the dated one.
