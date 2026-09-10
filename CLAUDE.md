@@ -1,15 +1,18 @@
 # Diretrizes gerais do projeto
 
-Para um ticket de implementação, leia `docs/agents/orchestration.md` para escolher o
-fluxo aplicável e executar os gates do repositório. Solo TDD com revisão entre modelos é o
-fluxo padrão; use PTMR apenas quando o usuário pedir um ciclo orquestrado. Ao usar PTMR,
-leia também `.agents/skills/ptmr/SKILL.md` para o loop e os contratos de papel.
+Antes de tocar no repo, leia `docs/agents/orchestration.md`: gates (testes, typecheck,
+build), branches e as especificidades do código que nenhum teste adivinha.
+
+O fluxo de trabalho — um ticket por vez, três etapas disparadas à mão — está na
+tabela em `AGENTS.md`; o detalhe de cada etapa neste repo está em `orchestration.md`.
+
+Commits e PRs seguem Conventional Commits e referenciam o ID do ticket no assunto
+(`feat(pill): ... (SLIP-31)`).
 
 ## Onde o trabalho é rastreado
 
-Issues locais em `.scratch/<feature-slug>/` (convenção completa em `docs/agents/issue-tracker.md`): `spec.md` (a spec da feature), `issues/NN-slug.md`
-(um ticket por arquivo, linha `**Status:**` no topo com os rótulos de
-`docs/agents/triage-labels.md` mais `complete`) e, nas features
-tocadas pelo PTMR, `ledger.md` (um registro por ciclo, escrito só pelo master — ver
-`docs/agents/orchestration.md`). Trabalho aberto = tickets sem `complete`/`wontfix`. Histórico
-de fechamento = `git log -- .scratch/`.
+Issues locais em `.scratch/<feature-slug>/` (convenção completa em `docs/agents/issue-tracker.md`):
+`spec.md` (a spec da feature) e `issues/SLIP-<N>-slug.md` (um ticket por arquivo, com ID único no
+repo inteiro; linhas `**Status:**` e `**Type:**` no topo, com os rótulos de
+`docs/agents/triage-labels.md` mais `complete`). Trabalho aberto = tickets sem
+`complete`/`wontfix`. Histórico de fechamento = `git log -- .scratch/`.

@@ -46,6 +46,12 @@ Default posture: these skills were designed for GitHub. If a `git remote` points
 - **Local markdown**: issues live as files under `.scratch/<feature>/` in this repo (good for solo projects or repos without a remote)
 - **Other** (Jira, Linear, etc.): ask the user to describe the workflow in one paragraph; the skill will record it as freeform prose
 
+On **local markdown**, ask one follow-up: the **project key** that prefixes ticket IDs, Jira-style
+(`SLIP-31`). Propose the repo directory name, uppercased and trimmed to 2–5 letters, so the user can
+accept it in a word. Substitute it for `<KEY>` throughout the template. If the repo already has
+tickets under an older numbering, say so and set the counter to start after the highest existing one
+rather than renumbering: their IDs are already frozen into merged commits.
+
 Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off**. Leave it off and don't raise it: a user who wants external PRs in the triage queue can flip the flag in the file later.
 
 **Section B: Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't installed (exploration told you), since an uninstalled skill needs no labels.
