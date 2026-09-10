@@ -65,6 +65,16 @@ describe("identity — rename to Slip + portrait lock", () => {
     const cap = read("src/components/CaptureBar.tsx");
     expect(cap).toContain('"capture/kind"');
   });
+
+  // Row 14 — GREEN guard: DESIGN.md frontmatter padding is the Card's own literal.
+  // Frontmatter drifting from the code is this repo's recurring documentation defect.
+  it("DESIGN.md task-card padding tokens are the Card's padding literals", () => {
+    const design = read("DESIGN.md");
+    const phone = design.match(/^ {4}padding: "(.+)"$/m)?.[1];
+    const wall = design.match(/^ {4}paddingWall: "(.+)"$/m)?.[1];
+
+    expect(read("src/components/Card.tsx")).toContain(`padding: bubble ? "${phone}" : "${wall}"`);
+  });
 });
 
 describe("dark chrome shell", () => {

@@ -99,6 +99,8 @@ export function CaptureBar({ onCapture }: Props) {
 
   const blank = text.trim() === "";
   const lines = text.split("\n").length;
+  const deadline = dayStr === "" ? null : inferDeadline(Number(dayStr), new Date());
+  const blocked = blank || (dayStr !== "" && deadline === null);
 
   const selectKind = (selected: Kind) => {
     setKind(selected);
@@ -112,10 +114,7 @@ export function CaptureBar({ onCapture }: Props) {
   };
 
   const capture = () => {
-    if (blank) return;
-    const deadline =
-      dayStr === "" ? null : inferDeadline(Number(dayStr), new Date());
-    if (dayStr !== "" && deadline === null) return;
+    if (blocked) return;
     // Clearing the fields *is* the success signal: when storage refused the write the
     // input keeps text, kind and deadline exactly as typed, so a retry costs nothing.
     if (!onCapture(text, kind, deadline)) return;
@@ -235,7 +234,7 @@ export function CaptureBar({ onCapture }: Props) {
           // Shape *and* range: a day past 31 can never become a Deadline, so it is
           // refused at the keystroke instead of being accepted and then silently
           // dropped on send. 0 still passes -- it is the first keystroke of "03" --
-          // and capture() refuses it there.
+          // and the send control visibly refuses it until the day becomes valid.
           if (/^\d{0,2}$/.test(raw) && Number(raw) <= 31) setDayStr(raw);
         }}
         aria-label="prazo"
@@ -256,17 +255,17 @@ export function CaptureBar({ onCapture }: Props) {
       <button
         type="submit"
         aria-label="enviar"
-        disabled={blank}
+        disabled={blocked}
         style={{ flex: "none", minWidth: 44, minHeight: 44, padding: 0, border: "none",
                  background: "transparent", display: "inline-flex", alignItems: "center",
-                 justifyContent: "center", cursor: blank ? "default" : "pointer" }}
+                 justifyContent: "center", cursor: blocked ? "default" : "pointer" }}
       >
         <span
           aria-hidden="true"
           style={{ width: 36, height: 36, borderRadius: 999, display: "inline-flex",
                    alignItems: "center", justifyContent: "center",
-                   background: blank ? "var(--text-quiet)" : "var(--text-primary)",
-                   color: "var(--surface)", opacity: blank ? 0.45 : 1 }}
+                   background: blocked ? "var(--text-quiet)" : "var(--text-primary)",
+                   color: "var(--surface)", opacity: blocked ? 0.45 : 1 }}
         >
           <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M2.5 21 23 12 2.5 3v7l14 2-14 2z" />

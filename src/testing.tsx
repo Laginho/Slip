@@ -7,7 +7,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { ReactElement } from "react";
 import { vi } from "vitest";
-import type { Task } from "./store";
+import { STORAGE_KEY, type Task } from "./store";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -22,6 +22,25 @@ export function task(over: Partial<Task> & Pick<Task, "id">): Task {
     updatedAt: 1,
     ...over,
   };
+}
+
+export function seedStorage(tasks: object[]): string {
+  const blob = JSON.stringify(tasks);
+  localStorage.setItem(STORAGE_KEY, blob);
+  return blob;
+}
+
+export function throwOnSetItem(): ReturnType<typeof vi.spyOn> {
+  return vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new Error("QuotaExceededError");
+  });
+}
+
+/** jsdom normalises hex colours to rgb(); compare palette values through this helper. */
+export function toRgb(hex: string): string {
+  const value = hex.replace("#", "");
+  const channels = [0, 2, 4].map((start) => parseInt(value.slice(start, start + 2), 16));
+  return `rgb(${channels.join(", ")})`;
 }
 
 /** Installs a static matchMedia stub for the queries selected by `matches`. */

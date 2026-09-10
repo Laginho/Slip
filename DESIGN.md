@@ -45,7 +45,8 @@ components:
     backgroundColor: "{colors.work-light}"
     textColor: "{colors.ink-on-light}"
     rounded: "{rounded.card}"
-    padding: "11px 13px"
+    padding: "10px 14px"
+    paddingWall: "16px 18px"
   capture-bar:
     backgroundColor: "{colors.capture-bg}"
     textColor: "{colors.text-primary}"
@@ -119,16 +120,16 @@ user rules on it; bold weight carries it meanwhile.
 sans-serif`) — native feel, zero webfont cost.
 
 ### Hierarchy
-- **Task text** (400, 16px, 1.3): the Card's content; also the minimum size that
-  stops iOS zooming a focused input.
+- **Task text** (400): 16px/1.3 on the wall and 18px/1.5 in the phone bubble.
+  Inputs remain at least 16px to stop iOS zooming a focused field.
 - **Meta/label** (700 bold for "desfazer" and overdue labels; 13–14px for the Kind
   pop-up, toasts, archive rows): quiet support, underlined when tappable.
 
 ## Layout
 
-Phone (<900px): one centred column capped at 620px; the list is bottom-anchored
-(`justify-content: flex-end`) so short lists sit next to the capture bar; the page
-never scrolls — the list area does (`100dvh`, safe-area insets respected).
+Phone (<900px): one centred column capped at 620px; Tasks start at the top of the
+scrollable list and the capture bar stays pinned at the bottom. The page never scrolls —
+the list area does (`100dvh`, safe-area insets respected).
 
 Desktop (≥900px): the shell drops its cap and each section becomes a post-it wall —
 CSS grid `repeat(3, minmax(260px, 300px))`, switching to four columns at a 1168px
@@ -199,7 +200,7 @@ border.
   layout instead.
 - **Do** keep the capture bar pinned, floating on the capture ground, and reachable at
   all times.
-- **Do** preserve bottom-anchoring of the phone list and the wall's square post-its.
+- **Do** preserve the phone list's top-to-bottom flow and the wall's square post-its.
 - **Do** keep gestures and their keyboard equivalents working on any new layout.
 
 ### Don't:

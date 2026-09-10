@@ -74,8 +74,8 @@ the absence of everything else.
 - Full product spec: `.scratch/task-tracker/spec.md`; phase 2 decisions:
   `.scratch/polish-and-publish/spec.md`; vocabulary: `CONTEXT.md`; sync design:
   `docs/adr/0001-*`.
-- 103 passing tests encode behaviour (urgency math, merge cases, write-failure
-  boundaries, notification layer).
+- The automated suite encodes behaviour including urgency math, merge cases,
+  write-failure boundaries, and the notification layer.
 
 ## Product Principles
 

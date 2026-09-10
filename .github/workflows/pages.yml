@@ -30,6 +30,8 @@ jobs:
         uses: actions/configure-pages@v6
       - name: Install
         run: npm ci
+      - name: Dependency audit
+        run: npm audit --audit-level=high --omit=dev
       - name: Require Supabase secrets
         # Secrets reach only the steps that need them (step-level env, never job
         # env), so npm ci/tests/typecheck never see them.

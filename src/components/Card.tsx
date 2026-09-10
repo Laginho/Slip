@@ -276,7 +276,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
       pendingTap.current = undefined;
       // Only a fine pointer edits on a single tap. On a touch screen a single tap has
       // to stay inert, or it would fire on the way into every double-tap.
-      if (window.matchMedia("(pointer: fine)").matches) beginEdit();
+      if (fine) beginEdit();
     }, DOUBLE_TAP_MS);
   };
 

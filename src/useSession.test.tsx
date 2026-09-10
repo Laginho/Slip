@@ -1,6 +1,6 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { dispatch, render, task, unmount } from "./testing";
+import { dispatch, render, task, throwOnSetItem, unmount } from "./testing";
 import type { Task } from "./store";
 
 vi.mock("./sync", async (importOriginal) => {
@@ -13,12 +13,6 @@ vi.mock("./sync", async (importOriginal) => {
 
 import { sync } from "./sync";
 import { useSession } from "./useSession";
-
-function throwOnSetItem(): ReturnType<typeof vi.spyOn> {
-  return vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-    throw new Error("QuotaExceededError");
-  });
-}
 
 function freshSyncMock(): ReturnType<typeof vi.fn> {
   return vi.mocked(sync);

@@ -23,11 +23,8 @@ Tickets created before that convention keep their old per-feature `NN-` numberin
 
 Run from the repo root of the checkout under test:
 
-- Test suite: `npm test` (vitest, whole suite; single file: `npx vitest run <path>`).
-  From the main checkout, `npm test` also walks every worktree under `.claude/worktrees/`
-  and reports their files as part of the suite (27 files instead of 9 with two worktrees
-  present). Run gates inside the cycle's worktree, or `npx vitest run --dir src` from the
-  main checkout.
+- Test suite: `npm test` (Vitest is bound to this checkout's `src/`; single file:
+  `npx vitest run <path>`).
 - Typecheck: `npx tsc -b` (strict, `noUnusedLocals` — unused imports fail the gate)
 - Lint: `npm run lint` (eslint, `react-hooks` rules as errors, `--max-warnings=0`)
 - Build (when a cycle touches build config or the PWA shell): `npm run build`
@@ -45,8 +42,8 @@ Run from the repo root of the checkout under test:
 - jsdom does not reflect IDL properties such as `enterKeyHint`: assert with
   `getAttribute("enterkeyhint")`. It computes no layout, so assert declared inline styles
   (`el.style.minWidth === "44px"`), never sizes; it normalises hex colours to `rgb()`, so
-  compare palette values through a hex→rgb helper (`toRgb` in `src/App.test.tsx`, `rgb` in
-  `src/Card.test.tsx`). Known since Leva 1a and still cost slip-1b cycle 05: test matrices
+  compare palette values through a hex→rgb helper (`toRgb` in `src/testing.tsx`, `rgb` in
+  `src/Card.visual.test.tsx`). Known since Leva 1a and still cost slip-1b cycle 05: test matrices
   must spell the `rgb(...)` form, not the palette constant.
 - Media stubs in `src/testing.tsx`: `stubNoMatchMedia`, `stubDesktopMedia`, `stubDarkMedia`,
   `stubMediaWithChangeListener`. Only the last records `change` listeners; `useMediaQuery`
@@ -55,11 +52,12 @@ Run from the repo root of the checkout under test:
   validated by unit tests; in the browser, drive them with JS-dispatched `KeyboardEvent`s and
   say so in the PR.
 - When a capture element changes tag or label, grep every legacy selector in
-  `src/App.test.tsx` before the red commit. Cycle 02 of slip-1b lost a cycle to one
+  `src/App*.test.tsx` before the red commit. Cycle 02 of slip-1b lost a cycle to one
   `input[placeholder=…]` at a single line.
 - `src/testing.tsx` already has `activate` (models the click a real Enter/Space produces on a
   button, which jsdom never synthesises), `click`, `dispatch`, `keyEvent`, `typeInto`,
-  `queryLabel`, `seedStorage`, `throwOnSetItem`. Look there before writing a helper.
+  `queryLabel`, `seedStorage`, `throwOnSetItem`, and `toRgb`. Look there before writing
+  a helper.
 - `repeat(auto-fill, minmax(a, b))` counts its tracks by the definite maximum `b`: four
   300px tracks need 1248px, so the formula gave three columns at 1200px (ticket 04). When a
   ticket pins a CSS literal next to an outcome, prototype the literal in the browser before
