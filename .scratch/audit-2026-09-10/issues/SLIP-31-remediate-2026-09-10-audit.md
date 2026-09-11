@@ -36,3 +36,7 @@ and the remediation record states the real numbers.
   Two documentation corrections committed by the reviewer: DESIGN.md's wall Task text is
   `6.67cqw`, not a flat 16px, and the remediation record said 1,000 lines where the rule
   applied was 800.
+- 2026-09-10 — Count corrected while closing SLIP-32: `publish.test.ts` went 18 → 12
+  blocks, which Vitest runs as 13 cases (one is an `it.each` of two rows). The ledger row
+  said 11, undercounting by missing the `it.each`; this comment said 12 without saying of
+  what. The audit at `942a105` flagged the two numbers disagreeing.
