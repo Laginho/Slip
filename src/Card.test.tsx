@@ -51,7 +51,7 @@ async function renderCard(
 
 async function openEditor(container: HTMLElement): Promise<HTMLTextAreaElement> {
   await activate(queryLabel(container, "Editar")!);
-  return container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+  return container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
 }
 
 beforeEach(() => {
@@ -190,7 +190,7 @@ describe("the edit lifecycle", () => {
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(card, "entregar relatório revisado");
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     // A standalone Card renders its props; the committed text landing in storage is
     // asserted against the real App in App.test.tsx. Here we pin the editor closing
     // and keyboard focus returning to the Card instead of dropping to <body>.
@@ -210,7 +210,7 @@ describe("the edit lifecycle", () => {
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(card, "texto que não salvou");
     // The editor never closed and every keystroke survives for a retry.
-    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     expect(stillOpen.value).toBe("texto que não salvou");
   });
 
@@ -223,7 +223,7 @@ describe("the edit lifecycle", () => {
     await act(async () => input.blur()); // focus falls to <body>, as the user moved it
 
     expect(onEdit).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     expect(document.activeElement).toBe(document.body); // nothing yanked back
   });
 
@@ -236,7 +236,7 @@ describe("the edit lifecycle", () => {
     await dispatch(keyEvent("Escape"), input);
 
     expect(onEdit).not.toHaveBeenCalled();
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     expect(container.textContent).toContain(card.text);
     expect(document.activeElement).toBe(queryLabel(container, "Editar"));
   });
@@ -280,7 +280,7 @@ describe("the textarea editor (issue 01)", () => {
   it("10 — the editor is a textarea holding the full text, focused", async () => {
     const { container } = await renderEditorCard("a\nb", false);
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]');
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]');
     expect(editor).not.toBeNull();
     expect(editor!.value).toBe("a\nb");
     expect(document.activeElement).toBe(editor);
@@ -292,7 +292,7 @@ describe("the textarea editor (issue 01)", () => {
     const { card, container } = await renderEditorCard("a\nb\nc", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     // commitEdit short-circuits when the draft is unchanged, so type a real change.
     typeInto(editor, "a\nb\nc\nd");
     const event = keyEvent("Enter");
@@ -301,7 +301,7 @@ describe("the textarea editor (issue 01)", () => {
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(card, "a\nb\nc\nd");
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -311,12 +311,12 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard("a\nb\nc", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     const event = keyEvent("Enter", { shiftKey: true });
     await dispatch(event, editor);
 
     expect(onEdit).not.toHaveBeenCalled();
-    expect(container.querySelector('textarea[aria-label="Task"]')).not.toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).not.toBeNull();
     expect(event.defaultPrevented).toBe(false);
   });
 
@@ -326,12 +326,12 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard("a\nb\nc", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     const event = keyEvent("Enter");
     await dispatch(event, editor);
 
     expect(onEdit).not.toHaveBeenCalled();
-    expect(container.querySelector('textarea[aria-label="Task"]')).not.toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).not.toBeNull();
     expect(event.defaultPrevented).toBe(false);
   });
 
@@ -341,13 +341,13 @@ describe("the textarea editor (issue 01)", () => {
     const { card, container } = await renderEditorCard("a\nb", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     typeInto(editor, "a\nb\nc");
     await act(async () => editor.blur());
 
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledWith(card, "a\nb\nc");
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
   });
 
   it("15 — Escape cancels without writing, restores the original text, closes", async () => {
@@ -355,12 +355,12 @@ describe("the textarea editor (issue 01)", () => {
     const { card, container } = await renderEditorCard("a\nb", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     typeInto(editor, "other");
     await dispatch(keyEvent("Escape"), editor);
 
     expect(onEdit).not.toHaveBeenCalled();
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     expect(container.textContent).toContain(card.text);
   });
 
@@ -370,12 +370,12 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard("a\nb", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     typeInto(editor, "a\nb\nc");
     await act(async () => editor.blur());
 
     expect(onEdit).toHaveBeenCalledTimes(1);
-    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     expect(stillOpen.value).toBe("a\nb\nc");
   });
 
@@ -385,7 +385,7 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard("a\nb\nc", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
 
     for (const handler of rec.listeners.get("(pointer: fine)") ?? []) {
       await act(async () => {
@@ -405,7 +405,7 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard(eightLines, true);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]');
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]');
     expect(editor).not.toBeNull();
     expect(editor!.value).toBe(eightLines);
   });
@@ -416,7 +416,7 @@ describe("the textarea editor (issue 01)", () => {
     const { container } = await renderEditorCard("a\nb", false, onEdit);
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     const event = keyEvent("Enter");
     await dispatch(event, editor);
 
@@ -493,7 +493,7 @@ describe("gestures starting on a revealed action button", () => {
       await act(async () => { vi.advanceTimersByTime(300); });
 
       expect(onComplete).toHaveBeenCalledTimes(1);
-      expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     } finally {
       vi.useRealTimers();
     }
@@ -508,7 +508,7 @@ describe("gestures starting on a revealed action button", () => {
 
       await dispatch(fire("pointerdown", 0), button);
       await act(async () => { vi.advanceTimersByTime(600); });
-      expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
 
       await dispatch(fire("pointerup", 0), button);
       await dispatch(new MouseEvent("click", { bubbles: true }), button);
@@ -575,7 +575,7 @@ describe("gestures starting on a revealed action button", () => {
       await act(async () => { vi.advanceTimersByTime(300); });
 
       expect(onDelete).toHaveBeenCalledTimes(1);
-      expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
       expect(li.style.transform).toBe("");
     } finally {
       vi.useRealTimers();
@@ -615,7 +615,7 @@ describe("gestures starting on a revealed action button", () => {
       await dispatch(fire("pointerdown", 0), li);
       await act(async () => { vi.advanceTimersByTime(500); });
 
-      expect(container.querySelector('textarea[aria-label="Task"]')).not.toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).not.toBeNull();
     } finally {
       vi.useRealTimers();
     }
@@ -654,13 +654,13 @@ describe("gestures starting on a revealed action button", () => {
       await dispatch(fire("pointerup", 0), button);
       await dispatch(new MouseEvent("click", { bubbles: true }), button);
       expect(onComplete).toHaveBeenCalledTimes(1);
-      expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
 
       // Body path — fine-pointer tap-edit
       await dispatch(fire("pointerdown", 0), li);
       await dispatch(fire("pointerup", 0), li);
       await act(async () => { vi.advanceTimersByTime(250); });
-      expect(container.querySelector('textarea[aria-label="Task"]')).not.toBeNull();
+      expect(container.querySelector('textarea[aria-label="tarefa"]')).not.toBeNull();
     } finally {
       vi.useRealTimers();
     }

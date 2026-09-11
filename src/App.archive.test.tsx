@@ -625,7 +625,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const main = container.querySelector("main")!;
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>("textarea[aria-label='Task']")!;
+    const editor = container.querySelector<HTMLTextAreaElement>("textarea[aria-label='tarefa']")!;
     typeInto(editor, "rascunho");
 
     const event = keyEvent("H", { ctrlKey: true });
@@ -633,7 +633,7 @@ describe("Ctrl+H toggles the Archive", () => {
 
     expect(main.textContent).toContain("ver concluídas");
     expect(main.textContent).not.toContain("entregar relatório");
-    const after = container.querySelector<HTMLTextAreaElement>("textarea[aria-label='Task']");
+    const after = container.querySelector<HTMLTextAreaElement>("textarea[aria-label='tarefa']");
     expect(after).not.toBeNull();
     expect(after!.value).toBe("rascunho");
     expect(event.defaultPrevented).toBe(false);

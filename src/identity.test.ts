@@ -39,6 +39,27 @@ describe("identity — rename to Slip + portrait lock", () => {
     expect(html).toContain("%THEME_COLOR%");
   });
 
+  // Audit 2026-09-10 finding 1: a Task holding an unbreakable token (a pasted URL, a
+  // boleto number, a Windows path) painted outside its Card. `pre-line` wraps at spaces
+  // only. The rule is inherited from body so it reaches the bubble, the wall square and
+  // the Archive row; jsdom never loads this stylesheet, so the file is the only guard.
+  it("index.html body sets overflow-wrap: anywhere", () => {
+    expect(read("index.html")).toContain("overflow-wrap: anywhere;");
+  });
+
+  // Audit 2026-09-10 finding 2: maximum-scale blocks pinch-zoom on Android Chrome, the
+  // primary target in PRODUCT.md, and fails WCAG 1.4.4. It bought nothing: iOS Safari has
+  // ignored it since v10, so it never guarded the focused-field zoom it is usually
+  // reached for -- that is the input's own font size (DESIGN.md typography).
+  it("index.html viewport does not cap zoom", () => {
+    const html = read("index.html");
+    const at = html.indexOf('name="viewport"');
+    const meta = html.slice(at, html.indexOf("/>", at));
+    expect(meta).toContain("width=device-width");
+    expect(meta.toLowerCase()).not.toContain("maximum-scale");
+    expect(meta.toLowerCase()).not.toContain("user-scalable");
+  });
+
   // Row 5 — RED: package name currently "task-tracker"
   it("package.json name is 'slip'", () => {
     const pkg = read("package.json");

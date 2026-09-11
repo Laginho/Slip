@@ -499,7 +499,7 @@ describe("the square post-it (ticket 04)", () => {
     });
 
     await activate(queryLabel(container, "Editar")!);
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     expect(editor.value).toBe(twelveLines);
     expect(editor.style.overflowY).toBe("auto");
     expect(editor.style.flexGrow).toBe("1");
