@@ -453,7 +453,7 @@ export function Card({ task, now, wide, onComplete, onDelete, onEdit }: Props) {
                 finishEditing();
               }
             }}
-            aria-label="Task"
+            aria-label="tarefa"
             rows={Math.max(1, draft.split("\n").length)}
             style={{
               width: "100%",

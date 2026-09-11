@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <!-- Injected from SURFACE and SURFACE_DARK in src/palette.ts by vite.config.ts. -->
     <meta name="theme-color" content="%THEME_COLOR%" />
@@ -34,6 +34,11 @@
           sans-serif;
         /* Capture must never be scrolled away from; the list scrolls, the page does not. */
         overflow: hidden;
+        /* A pasted URL or boleto number has no space to wrap at. Inherited, so one
+           declaration covers the phone bubble, the wall square and the Archive row.
+           `anywhere` rather than `break-word` so the intrinsic minimum shrinks too:
+           a long token cannot widen a grid track or a flex item before it breaks. */
+        overflow-wrap: anywhere;
         -webkit-tap-highlight-color: transparent;
       }
       button {

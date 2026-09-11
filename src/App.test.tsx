@@ -144,13 +144,13 @@ describe("Card actions under a failing write", () => {
     const container = await render(<App />);
 
     await activate(queryLabel(container, "Editar")!);
-    const input = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const input = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     typeInto(input, "texto editado");
     await dispatch(keyEvent("Enter"), input);
 
     // The editor stayed open and every keystroke survived -- nothing was discarded
     // behind the generic banner.
-    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const stillOpen = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     expect(stillOpen.value).toBe("texto editado");
     expect(container.textContent).toContain(SAVE_ERROR);
     expect(localStorage.getItem(STORAGE_KEY)).toBe(seeded);
@@ -158,7 +158,7 @@ describe("Card actions under a failing write", () => {
     // Storage recovers; the same Enter path now commits and closes.
     vi.mocked(Storage.prototype.setItem).mockRestore();
     await dispatch(keyEvent("Enter"), input);
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     expect(container.textContent).toContain("texto editado");
     const [stored] = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(stored.text).toBe("texto editado");
@@ -176,12 +176,12 @@ describe("Card actions under a failing write", () => {
 
     // Clearing an editor's text is a store no-op: nothing is written anywhere.
     await activate(queryLabel(container, "Editar")!);
-    const input = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Task"]')!;
+    const input = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="tarefa"]')!;
     typeInto(input, "");
     await dispatch(keyEvent("Enter"), input);
 
     // The harmless no-op still reports success, so the editor closes...
-    expect(container.querySelector('textarea[aria-label="Task"]')).toBeNull();
+    expect(container.querySelector('textarea[aria-label="tarefa"]')).toBeNull();
     // ...but storage has not recovered, so the banner must NOT claim it did.
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(localStorage.getItem(STORAGE_KEY)).toBe(seeded);

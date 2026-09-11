@@ -121,10 +121,12 @@ sans-serif`) — native feel, zero webfont cost.
 
 ### Hierarchy
 - **Task text** (400): `6.67cqw`/1.3 on the wall — it scales with the square Card, about
-  16px at the 3-column width — and 18px/1.5 in the phone bubble. Inputs remain at least
-  16px to stop iOS zooming a focused field.
+  16px at the 3-column width — and 18px/1.5 in the phone bubble. The capture textarea is
+  18px, at or above the 16px iOS needs to leave a focused field unzoomed; the two-digit
+  day field is 14px and will zoom on focus there, which is accepted for a field holding
+  two characters.
 - **Meta/label** (700 bold for "desfazer" and overdue labels; 13–14px for the Kind
-  pop-up, toasts, archive rows): quiet support, underlined when tappable.
+  pop-up, toasts, the archive's empty note): quiet support, underlined when tappable.
 
 ## Layout
 
@@ -137,8 +139,11 @@ CSS grid `repeat(3, minmax(260px, 300px))`, switching to four columns at a 1168p
 viewport, gap 16px, the list capped at 1248px and centred. Square Cards stop growing
 at 300px: four per row at 1200px, three on narrower desktop windows, never five.
 Reading order stays deadline-ascending, left-to-right, top-to-bottom.
-Archive remains an expandable section beneath; the capture bar spans the full width,
-still pinned to the bottom.
+The capture bar spans the full width, still pinned to the bottom.
+
+On both profiles the Archive sits *above* the Open list — the first child of `<main>` —
+and starts scrolled out of sight: the list region opens offset by the archive row's
+height, so pulling down reveals it and the toggle scrolls it back away.
 
 Spacing: 16px page gutters and wall gaps, 12px between phone Cards and main sections.
 The dateless section adds its existing 24px top margin after dated Tasks; other list
@@ -179,7 +184,9 @@ border.
   light hue with its letter (T trabalho, F faculdade, C casa) — a textarea growing to
   five lines then scrolling ("uma tarefa..."), the two-digit day field ("dd"), and a
   44px send button ("enviar": 36px circle in `--text-primary`, paper-plane glyph in
-  `--surface`, dimmed in `--text-quiet` while blank).
+  `--surface`, dimmed in `--text-quiet` and disabled whenever capture is blocked —
+  blank text, or the day `0`/`00` — the only values the field accepts that resolve to
+  no date, since the inference scans a year ahead and every day 1–31 lands in some month).
 - Tapping or clicking the dot opens a pop-up above it on `--capture-bg` with a hairline
   border, listing the three Kinds as lettered circles beside their words, the selected
   one pressed. Choosing closes the pop-up and returns focus to the textarea; Escape or a
@@ -188,11 +195,11 @@ border.
   Enter breaks and the button sends; Alt+1/2/3 switches Kind without opening the pop-up.
 
 ### Toast / banner
-- Charcoal rounded strip (10px), ivory text, floating over the top edge, centred on
-  the column, respecting the top safe-area inset. Never in the document flow.
+- Charcoal rounded strip (10px), ivory text, floating over the top edge and aligned to
+  its right, respecting the top safe-area inset. Never in the document flow.
 
 ### Archive rows
-- Quiet struck-through grey text, 14px; a plain underlined link toggles it.
+- Quiet struck-through grey text, 16px; a plain underlined link toggles it.
 
 ## Do's and Don'ts
 
