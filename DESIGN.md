@@ -185,7 +185,8 @@ border.
   five lines then scrolling ("uma tarefa..."), the two-digit day field ("dd"), and a
   44px send button ("enviar": 36px circle in `--text-primary`, paper-plane glyph in
   `--surface`, dimmed in `--text-quiet` and disabled whenever capture is blocked —
-  blank text, or a day the deadline inference cannot use such as `0` or `32`).
+  blank text, or the day `0`/`00` — the only values the field accepts that resolve to
+  no date, since the inference scans a year ahead and every day 1–31 lands in some month).
 - Tapping or clicking the dot opens a pop-up above it on `--capture-bg` with a hairline
   border, listing the three Kinds as lettered circles beside their words, the selected
   one pressed. Choosing closes the pop-up and returns focus to the textarea; Escape or a

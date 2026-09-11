@@ -52,12 +52,12 @@ describe("identity — rename to Slip + portrait lock", () => {
   // ignored it since v10, so it never guarded the focused-field zoom it is usually
   // reached for -- that is the input's own font size (DESIGN.md typography).
   it("index.html viewport does not cap zoom", () => {
-    const html = read("index.html");
-    const at = html.indexOf('name="viewport"');
-    const meta = html.slice(at, html.indexOf("/>", at));
-    expect(meta).toContain("width=device-width");
-    expect(meta.toLowerCase()).not.toContain("maximum-scale");
-    expect(meta.toLowerCase()).not.toContain("user-scalable");
+    // Whole file, not a slice of the viewport tag: reordering the attributes so
+    // `content` precedes `name` must not let either cap back in unnoticed.
+    const html = read("index.html").toLowerCase();
+    expect(html).toContain("width=device-width");
+    expect(html).not.toContain("maximum-scale");
+    expect(html).not.toContain("user-scalable");
   });
 
   // Row 5 — RED: package name currently "task-tracker"
