@@ -11,7 +11,7 @@ import { STORAGE_KEY, type Task } from "./store";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** A Task with every field explicit, mirroring the helper in store.test.ts. */
+/** A Task with every field explicit, so a test never depends on a default. */
 export function task(over: Partial<Task> & Pick<Task, "id">): Task {
   return {
     text: over.id,
@@ -169,6 +169,14 @@ export function typeInto(input: HTMLInputElement | HTMLTextAreaElement, value: s
   )!.set!;
   setter.call(input, value);
   input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Submit the Capture pill the way Enter or the send button does. */
+export async function submitCapture(container: HTMLElement): Promise<void> {
+  await dispatch(
+    new Event("submit", { bubbles: true, cancelable: true }),
+    container.querySelector("form")!,
+  );
 }
 
 export function queryLabel(root: ParentNode, label: string): HTMLElement | null {

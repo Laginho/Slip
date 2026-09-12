@@ -14,6 +14,7 @@ import {
   stubDesktopMedia,
   stubMediaWithChangeListener,
   stubNoMatchMedia,
+  submitCapture,
   task,
   throwOnSetItem,
   toRgb,
@@ -31,12 +32,6 @@ import { CARD, INK_ON_LIGHT } from "./palette";
 
 const SAVE_ERROR = "não foi possível salvar";
 
-async function submitCapture(container: HTMLElement): Promise<void> {
-  await dispatch(
-    new Event("submit", { bubbles: true, cancelable: true }),
-    container.querySelector("form")!,
-  );
-}
 
 /** Query shortcuts — the pill is always a <form>. */
 function pillOf(container: HTMLElement) {

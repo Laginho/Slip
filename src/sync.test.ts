@@ -1,18 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Task } from "./store";
 import { merge, sync } from "./sync";
+import { task } from "./testing";
 
-function task(over: Partial<Task> & Pick<Task, "id">): Task {
-  return {
-    text: over.id,
-    kind: "work",
-    deadline: null,
-    done: false,
-    deleted: false,
-    updatedAt: 1,
-    ...over,
-  };
-}
 
 beforeEach(() => {
   localStorage.clear();

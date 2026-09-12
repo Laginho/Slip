@@ -1,7 +1,7 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { dispatch, render, task, throwOnSetItem, unmount } from "./testing";
-import type { Task } from "./store";
+import { dispatch, render, seedStorage, task, throwOnSetItem, unmount } from "./testing";
+import { STORAGE_KEY, load, type Task } from "./store";
 
 vi.mock("./sync", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./sync")>();
@@ -37,6 +37,92 @@ afterEach(async () => {
   await unmount();
   vi.restoreAllMocks();
   vi.useRealTimers();
+});
+
+/**
+ * Two same-origin windows -- an installed PWA beside a browser tab -- are two mounted
+ * sessions over one localStorage document. Each must fold the other's writes in before
+ * its own, or the second to write erases what the first saved (audit 2026-09-11,
+ * finding 1). Two hooks in one tree model that exactly: same storage, separate state.
+ */
+let otherResult: ReturnType<typeof useSession> | null = null;
+
+function OtherProbe() {
+  otherResult = useSession();
+  return null;
+}
+
+describe("Two windows over one storage", () => {
+  beforeEach(() => {
+    otherResult = null;
+    freshSyncMock().mockImplementation(async (local: Task[]) => local);
+  });
+
+  it("a capture in the second window keeps the first window's capture", async () => {
+    await render(
+      <>
+        <Probe />
+        <OtherProbe />
+      </>,
+    );
+
+    await act(async () => {
+      latestResult!.capture("AUDIT A", "work", null);
+    });
+    await act(async () => {
+      otherResult!.capture("AUDIT B", "work", null);
+    });
+
+    // What a reload of either window would read back.
+    expect(load().map((t) => t.text).sort()).toEqual(["AUDIT A", "AUDIT B"]);
+    // And what the second window shows without one.
+    expect(otherResult!.tasks.map((t) => t.text).sort()).toEqual(["AUDIT A", "AUDIT B"]);
+  });
+
+  it("a tombstone and an edit from the other window survive this window's write", async () => {
+    seedStorage([task({ id: "x", text: "apagar" }), task({ id: "y", text: "manter" })]);
+    await render(
+      <>
+        <Probe />
+        <OtherProbe />
+      </>,
+    );
+
+    // Window A deletes x and edits y; window B, still holding both as loaded, edits y.
+    await act(async () => {
+      latestResult!.discard(latestResult!.tasks[0]);
+    });
+    await act(async () => {
+      otherResult!.edit(otherResult!.tasks[1], "manter, editado");
+    });
+
+    const stored = load();
+    expect(stored.find((t) => t.id === "x")!.deleted).toBe(true);
+    expect(stored.find((t) => t.id === "y")!.text).toBe("manter, editado");
+    expect(otherResult!.tasks.find((t) => t.id === "x")!.deleted).toBe(true);
+  });
+
+  it("adopts another window's write from the storage event without writing", async () => {
+    await render(<Probe />);
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+
+    // Another window persisted a Task; the browser tells this one through `storage`.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([task({ id: "pc-1", text: "feito no PC" })]));
+    setItem.mockClear();
+    await dispatch(new StorageEvent("storage", { key: STORAGE_KEY }), window);
+
+    expect(latestResult!.tasks.map((t) => t.text)).toEqual(["feito no PC"]);
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it("ignores storage events for other keys", async () => {
+    await render(<Probe />);
+    const before = latestResult!.tasks;
+
+    await dispatch(new StorageEvent("storage", { key: "unrelated" }), window);
+
+    expect(latestResult!.tasks).toBe(before);
+  });
 });
 
 describe("Settle rebases an in-flight sync", () => {
