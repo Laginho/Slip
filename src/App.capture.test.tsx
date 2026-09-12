@@ -32,7 +32,6 @@ import { CARD, INK_ON_LIGHT } from "./palette";
 
 const SAVE_ERROR = "não foi possível salvar";
 
-
 /** Query shortcuts — the pill is always a <form>. */
 function pillOf(container: HTMLElement) {
   return container.querySelector("form") as HTMLElement;

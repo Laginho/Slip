@@ -13,7 +13,6 @@ import {
   setDone,
 } from "./store";
 
-
 beforeEach(() => {
   localStorage.clear();
 });

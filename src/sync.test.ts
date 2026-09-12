@@ -3,7 +3,6 @@ import type { Task } from "./store";
 import { merge, sync } from "./sync";
 import { task } from "./testing";
 
-
 beforeEach(() => {
   localStorage.clear();
   vi.stubEnv("VITE_SUPABASE_URL", "https://example.supabase.co");

@@ -38,7 +38,6 @@ function undoButton(container: ParentNode): HTMLButtonElement | null {
   );
 }
 
-
 beforeEach(() => {
   stubNoMatchMedia();
   localStorage.clear();

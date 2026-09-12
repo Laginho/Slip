@@ -36,3 +36,17 @@ makes the merge the human's call.
   each, reload the first, both listed and both stored; delete in one, the other drops it
   and storage holds the tombstone; no console errors. Left unactioned by design: the
   Process note that CI runs no job on pull requests.
+- 2026-09-11 — Review (Opus 5, PR #27). Red reproduced independently: `src/useSession.ts`
+  reverted to `main`, `npx vitest run src/useSession.test.tsx` → 3 failed / 18 passed, the
+  two-window captures keeping only the second and the `storage` event adopting nothing.
+  Green at `036ff27`: 13 files / 311 tests, `npx tsc -b` and `npm run lint` clean. Browser,
+  two real tabs on `localhost:5177`: tab 1 captures `REV A` → tab 2 shows it live without a
+  reload; tab 2 captures `REV B` → storage holds both; reload tab 1 → both listed, which is
+  the audit's symptom gone; delete `REV A` in tab 1 → tab 2 drops it and storage keeps it as
+  a tombstone beside an open `REV B`; no console errors in either tab. One correction
+  committed: four stray blank lines left behind where the duplicated helpers were removed.
+  Two residuals, neither worth a ticket: `onStorage` ignores `event.key === null`, the shape
+  a `localStorage.clear()` in another window fires, and `merge` appends the other window's
+  new ids, so two windows can order dateless Tasks differently — a divergence `sync` already
+  had. Closing was written by the implementing session; per `orchestration.md` step 3 that
+  commit belongs to the reviewer, and the ledger row below is corrected to name both.
