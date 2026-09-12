@@ -115,6 +115,65 @@ describe("Two windows over one storage", () => {
     expect(setItem).not.toHaveBeenCalled();
   });
 
+  /**
+   * The undo snapshot must be taken from the list the action actually mutated. That list
+   * folds in what the other window saved; `latest.current` does not until the `storage`
+   * event lands. A snapshot taken before the fold, undone after it, puts the pre-edit
+   * text back with a stamp that beats the edit (audit 2026-09-11 at 911cdb3, finding 1).
+   */
+  describe.each([
+    ["complete", (session: ReturnType<typeof useSession>, t: Task) => session.complete(t)],
+    ["discard", (session: ReturnType<typeof useSession>, t: Task) => session.discard(t)],
+  ])("undo after %s keeps the other window's edit", (_name, action) => {
+    const otherWindowEdits = async () => {
+      seedStorage([task({ id: "t", text: "original" })]);
+      await render(
+        <>
+          <Probe />
+          <OtherProbe />
+        </>,
+      );
+      await act(async () => {
+        latestResult!.edit(latestResult!.tasks[0], "saved in A");
+      });
+    };
+    const storageEvent = () =>
+      dispatch(new StorageEvent("storage", { key: STORAGE_KEY }), window);
+    const survived = () => {
+      expect(load().find((t) => t.id === "t")!.text).toBe("saved in A");
+      expect(otherResult!.tasks[0]).toMatchObject({
+        text: "saved in A",
+        done: false,
+        deleted: false,
+      });
+    };
+
+    it("when the storage event is delivered after the action", async () => {
+      await otherWindowEdits();
+      // B still holds "original"; the action's own write is what discovers the edit.
+      await act(async () => {
+        action(otherResult!, otherResult!.tasks[0]);
+      });
+      await storageEvent();
+      await act(async () => {
+        otherResult!.undo();
+      });
+      survived();
+    });
+
+    it("when the storage event was delivered before the action (control)", async () => {
+      await otherWindowEdits();
+      await storageEvent();
+      await act(async () => {
+        action(otherResult!, otherResult!.tasks[0]);
+      });
+      await act(async () => {
+        otherResult!.undo();
+      });
+      survived();
+    });
+  });
+
   it("ignores storage events for other keys", async () => {
     await render(<Probe />);
     const before = latestResult!.tasks;

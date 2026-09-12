@@ -201,16 +201,34 @@ export function useSession() {
   // being held for five seconds. That is what makes "a second action replaces the
   // pending toast, applying the first" free: the first was never deferred.
   /**
-   * The Task as the store holds it now, not as the caller's prop had it.
+   * A destructive action: apply `operation` to the Task, then offer an undo of what it was.
    *
-   * A Card can act on a prop from an earlier render: its exit guard fires on a timeout
-   * that closed over the render where the swipe began, and a sync landing mid-flight can
-   * replace that Task's text underneath it. The mutation itself only needs the id, but
-   * the snapshot is what undo restores -- and restoring a stale one would put the old
-   * text back over the newer edit, with a stamp that beats it.
+   * The snapshot is the Task as the list handed to the operation holds it -- not the
+   * caller's prop, and not `latest.current`. A Card can act on a prop from an earlier
+   * render (its exit guard fires on a timeout that closed over the render where the swipe
+   * began), and `latest.current` itself lags another window's save until the `storage`
+   * event is handled here; mutate() folds that save in before the operation runs. The
+   * snapshot is what undo restores, with a stamp that beats everything, so a snapshot
+   * older than the list it came from would put stale text back over the newer edit --
+   * this window's or the other window's.
+   *
+   * The toast is only created once the write has actually persisted. An unpersisted
+   * action must not offer an undo of something that never happened.
    */
-  const current = (task: Task): Task =>
-    latest.current.find((held) => held.id === task.id) ?? task;
+  const undoable = (
+    task: Task,
+    label: string,
+    operation: (list: Task[], id: string) => Task[],
+  ): boolean => {
+    let snapshot = task;
+    const landed = mutate((list) => {
+      snapshot = list.find((held) => held.id === task.id) ?? task;
+      return operation(list, task.id);
+    });
+    if (!landed) return false;
+    setPending({ snapshot, label, token: ++token.current });
+    return true;
+  };
 
   /** A new Task from Capture. Reports whether the write landed, like every action. */
   const capture = (text: string, kind: Kind, deadline: string | null): boolean =>
@@ -220,23 +238,10 @@ export function useSession() {
    * Each action reports whether it landed. A false return is the Card's cue to come
    * back from a swipe flight and Capture's cue to keep what the user typed.
    */
-  const complete = (task: Task): boolean => {
-    const target = current(task);
-    // The snapshot for undo must be the Task as it was before the action, so it is
-    // taken from `current()` before mutating -- but the toast is only created once the
-    // write has actually persisted. An unpersisted completion must not offer an undo
-    // of something that never happened.
-    if (!mutate((list) => setDone(list, target.id, true))) return false;
-    setPending({ snapshot: target, label: "tarefa concluída", token: ++token.current });
-    return true;
-  };
+  const complete = (task: Task): boolean =>
+    undoable(task, "tarefa concluída", (list, id) => setDone(list, id, true));
 
-  const discard = (task: Task): boolean => {
-    const target = current(task);
-    if (!mutate((list) => remove(list, target.id))) return false;
-    setPending({ snapshot: target, label: "tarefa apagada", token: ++token.current });
-    return true;
-  };
+  const discard = (task: Task): boolean => undoable(task, "tarefa apagada", remove);
 
   // Editing is not destructive -- the text is still on screen -- so it gets no toast.
   const edit = (task: Task, text: string): boolean =>
