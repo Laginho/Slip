@@ -1,6 +1,6 @@
 # SLIP-33: Remediate the 2026-09-11 audit at `4f14c90`
 
-**Status:** ready-for-agent
+**Status:** complete
 **Type:** fix
 
 **What to build:** every finding in `docs/audits/2026-09-11-4f14c90.md`, in the order
@@ -25,3 +25,14 @@ the PR description. The Process note (no PR CI) stays unactioned by design — `
 makes the merge the human's call.
 
 ## Comments
+
+- 2026-09-11 — Closed by `fix/audit-4f14c90-remediation`. Red `e2bb6d6` (four two-window
+  tests, three failing for the audit's reason; `task`/`submitCapture` down to one copy
+  each in `src/testing.tsx`), green `036ff27` (`reconciled()` in `useSession.ts`: every
+  write starts from the held list merged with `load()`; a `storage` listener adopts the
+  other window live). The audit report, untracked at `4f14c90`, is added by the same PR.
+- 2026-09-11 — Gates at `036ff27`: 13 files / 311 tests, `npx tsc -b`, `npm run lint`,
+  `vite build` clean. Browser, two tabs on one origin with Supabase unset: capture in
+  each, reload the first, both listed and both stored; delete in one, the other drops it
+  and storage holds the tombstone; no console errors. Left unactioned by design: the
+  Process note that CI runs no job on pull requests.
