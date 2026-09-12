@@ -1,6 +1,6 @@
 # SLIP-34: Remediate the 2026-09-11 audit at `911cdb3`
 
-**Status:** ready-for-agent
+**Status:** claimed
 **Type:** fix
 
 **What to build:** the single finding in `docs/audits/2026-09-11-911cdb3.md`.
