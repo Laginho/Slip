@@ -13,6 +13,7 @@ import {
   stubMediaWithChangeListener,
   stubNoMatchMedia,
   stubScrollTop,
+  submitCapture,
   task,
   throwOnSetItem,
   typeInto,
@@ -34,13 +35,6 @@ function undoButton(container: ParentNode): HTMLButtonElement | null {
     ([...container.querySelectorAll("button")].find(
       (button) => button.textContent === "desfazer",
     ) as HTMLButtonElement | undefined) ?? null
-  );
-}
-
-async function submitCapture(container: HTMLElement): Promise<void> {
-  await dispatch(
-    new Event("submit", { bubbles: true, cancelable: true }),
-    container.querySelector("form")!,
   );
 }
 

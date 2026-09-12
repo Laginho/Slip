@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  STORAGE_KEY,
   create,
   editText,
   load,
@@ -62,6 +63,30 @@ export function useSession() {
   const [saveError, setSaveError] = useState(false);
 
   /**
+   * This session's list with whatever another same-origin window has persisted since
+   * folded in -- an installed window beside a browser tab is two sessions over one
+   * document. Every write starts from here, because writing from `latest.current`
+   * alone replaces the document with a copy that predates the other window's saves and
+   * loses them. The rule is the sync merge: union by id, newer stamp wins, so a Task
+   * deleted or edited over there beats the stale copy held here.
+   *
+   * Returns `latest.current` itself when storage brought nothing new: merge() keeps the
+   * local object for every Task it does not replace, so identity is preserved and a
+   * no-op mutation still hands back the same reference.
+   *
+   * ponytail: read-merge-write is three synchronous steps, not one atomic one. Two
+   * windows writing inside the same microseconds could still interleave; a human on
+   * two windows never does. If that ceiling matters, elect one writer with the Web
+   * Locks API.
+   */
+  const reconciled = useCallback((): Task[] => {
+    const held = latest.current;
+    const merged = merge(held, load());
+    const same = merged.length === held.length && merged.every((t, i) => t === held[i]);
+    return same ? held : merged;
+  }, []);
+
+  /**
    * A sync result coming home, re-merged into the list as it stands *now*.
    *
    * The result was computed from a snapshot taken before the round trip, and the user can
@@ -80,12 +105,12 @@ export function useSession() {
    */
   const settle = useCallback((result: Task[]) => {
     try {
-      adopt(persist(merge(latest.current, result)));
+      adopt(persist(merge(reconciled(), result)));
     } catch {
       // Nothing to say to the user and nothing to retry. The local list is intact and
       // the next successful sync sends it again.
     }
-  }, [adopt]);
+  }, [adopt, reconciled]);
 
   /**
    * A round trip, fired and forgotten. Never awaited by anything the user is waiting for,
@@ -113,20 +138,21 @@ export function useSession() {
    * no cleared Capture fields) and leave the previous list on screen.
    */
   const mutate = (operation: (current: Task[]) => Task[]): boolean => {
+    const base = reconciled();
     let next: Task[];
     try {
-      next = operation(latest.current);
+      next = operation(base);
     } catch {
       setSaveError(true);
       return false;
     }
     // Every store path that actually writes goes through persist(), which returns a new
-    // list; a no-op (blank Capture/edit text) hands back the
-    // same array untouched. Such a call never touched storage, so it must neither clear
-    // saveError -- a false all-clear while the banner is up -- nor arm a sync for data
-    // that did not change. It still reports success, so harmless follow-ups (a no-op
-    // editor closing) may proceed.
-    const wrote = next !== latest.current;
+    // list; a no-op (blank Capture/edit text) hands back the base array untouched. Such a
+    // call never touched storage, so it must neither clear saveError -- a false
+    // all-clear while the banner is up -- nor arm a sync for data that did not change.
+    // It still reports success, so harmless follow-ups (a no-op editor closing) may
+    // proceed.
+    const wrote = next !== base;
     adopt(next);
     if (wrote) {
       setSaveError(false);
@@ -155,14 +181,21 @@ export function useSession() {
     const onVisibility = () => {
       if (document.visibilityState === "visible") syncNow();
     };
+    // Another same-origin window wrote the document: show it here too. Nothing to
+    // persist -- storage already holds it -- and nothing to sync, that window will.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) adopt(reconciled());
+    };
     window.addEventListener("online", syncNow);
+    window.addEventListener("storage", onStorage);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.clearTimeout(syncTimer.current);
       window.removeEventListener("online", syncNow);
+      window.removeEventListener("storage", onStorage);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [roundTrip, syncNow]);
+  }, [adopt, reconciled, roundTrip, syncNow]);
 
   // Every destructive action is applied immediately and offers a way back, rather than
   // being held for five seconds. That is what makes "a second action replaces the
