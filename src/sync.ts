@@ -90,12 +90,12 @@ export function saveConfig(url: string, key: string): string | null {
   try {
     parsed = new URL(url);
   } catch {
-    return "URL inválida.";
+    return "url inválida";
   }
-  if (parsed.protocol !== "https:") return "A URL precisa usar https.";
-  if (key === "") return "Chave vazia.";
+  if (parsed.protocol !== "https:") return "a url precisa usar https";
+  if (key === "") return "chave vazia";
   if (isPrivileged(key)) {
-    return "Chave privilegiada (service_role / sb_secret_) — use a publishable/anon key.";
+    return "chave privilegiada (service_role / sb_secret_) — use a chave publishable/anon";
   }
 
   localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key }));
