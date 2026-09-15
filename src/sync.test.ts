@@ -208,6 +208,13 @@ describe("saveConfig — validate and store the device pair", () => {
     expect(saveConfig("", "")).toBeNull();
     expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
   });
+
+  it("returns a reason instead of throwing when the write is refused", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota");
+    });
+    expect(saveConfig("https://mine.supabase.co", "anon-key")).toBe("não foi possível salvar");
+  });
 });
 
 describe("sync", () => {

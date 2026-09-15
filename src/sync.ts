@@ -81,10 +81,7 @@ function isPrivileged(key: string): boolean {
  * nothing is ever stored halfway.
  */
 export function saveConfig(url: string, key: string): string | null {
-  if (url === "" && key === "") {
-    localStorage.removeItem(SYNC_STORAGE_KEY);
-    return null;
-  }
+  if (url === "" && key === "") return write(() => localStorage.removeItem(SYNC_STORAGE_KEY));
 
   let parsed: URL;
   try {
@@ -98,8 +95,21 @@ export function saveConfig(url: string, key: string): string | null {
     return "chave privilegiada (service_role / sb_secret_) — use a chave publishable/anon";
   }
 
-  localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key }));
-  return null;
+  return write(() => localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key })));
+}
+
+/**
+ * Storage is authoritative (`mutate` in useSession.ts): a write refused by a
+ * private-mode or quota exception has to come back as a reason the Sync row can
+ * show, not as a throw out of its onClick.
+ */
+function write(persist: () => void): string | null {
+  try {
+    persist();
+    return null;
+  } catch {
+    return "não foi possível salvar";
+  }
 }
 
 function headers(cfg: Config): Record<string, string> {
