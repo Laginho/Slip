@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
-**Status:** ready-for-agent
-**Stage:** to-review
+**Status:** complete
+**Stage:** to-merge
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -225,3 +225,79 @@ exercised here, item 3 is a design decision, and the read-side validator is stag
 call, all as the review already noted.
 
 Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
+
+---
+
+#### Resolution (2026-09-15)
+
+**Approved, third stage-3 pass.** Criterion 2 holds this time, and the fix is pinned by a
+test that cannot re-derive itself from the implementation.
+
+**Decision.** All seven criteria pass. Nothing was changed in this pass — the review found
+no defect worth a fix, so the branch merges exactly as stage 2 left it.
+
+**Gate, re-run independently on the clean tree at `6550256`:** `npm test` 338 passed
+(14 files), `npx tsc -b` clean, `npm run build` ok.
+
+**Red-green proof.** Checked out `be2084d` (test-only) and ran the suite: 9 failed / 329
+passed, every failure `expected 116, received 104` — the flat 104 the gap-less formula
+produced. At `90b0655` (code-only) all 338 pass. Commit separation holds: `be2084d` touches
+only `App.archive.test.tsx` and `App.capture.test.tsx`, `90b0655` only `App.tsx`.
+
+**Why criterion 2 is right now, and not just different.** `main` is `padding: 16px 16px 6px;
+display: flex; flexDirection: column; gap: 12`, and the collapsed Archive returns a fragment,
+so both rows are direct flex children. Distance from the content top to the Open list is
+`16 + 44 + 12 + 44 + 12 = 128`; `archiveHiddenOffset(true)` returns `116`, leaving exactly
+the 12px section gap above the list — the same 12px the zero-Done case leaves at `60`
+(`16 + 44`, gap below). Both cases now agree with the pre-SLIP-35 look, and the formula
+`16 + rows*44 + (rows-1)*MAIN_GAP` is the general form. `MAIN_GAP` is the single constant
+`main`'s own `gap` style reads, so the two cannot drift.
+
+The test pins `12` as a literal in `TWO_ROW_HIDDEN` (`App.archive.test.tsx:16`) and in
+`App.capture.test.tsx:277`, not as a re-derivation of `ARCHIVE_ROW_HEIGHT` — jsdom performs
+no layout, so a literal is the only thing that can see this class of miscount.
+
+**Criteria.** 1 ✅ (`sync.test.ts`, 4 precedence tests including the one-empty-field case);
+2 ✅ (`Archive.test.tsx` placement/expand/no-dialog, plus the geometry above); 3 ✅ (the
+`sync()` "very next call, without a reload" test asserts the URL and the `apikey` header);
+4 ✅ (6 `saveConfig` refusals + 2 at the UI asserting the one-line reason); 5 ✅; 6 ✅
+(`App.test.tsx` rows 5/6, `App.archive.test.tsx` rows 6/8/10); 7 ✅ (338 passed;
+`useSession.test.tsx` untouched, `sync.test.ts` extended by +100 lines with no pre-existing
+assertion weakened).
+
+**Files:** `src/sync.ts`, `src/components/Archive.tsx`, `src/App.tsx`, and their tests.
+Nothing outside the ticket's stated surface.
+
+#### Carried forward, not blocking the merge
+
+None of these is a criterion failure; each wants its own ticket.
+
+1. **`storedConfig()` believes storage** (`src/sync.ts:29`) — no `https:` check, no
+   `isPrivileged` on the read side, where `store.ts` `toTask` and `merge` both treat
+   storage and remote as hostile. Sharing one validator between save and read is a new
+   requirement with its own criterion and test. Stage 1's call, unchanged since the first
+   pass.
+2. **`archiveHiddenOffset` assumes every row is 44px, and an expanded `SyncRow` is not.**
+   With the Sync form open and the Archive collapsed, crossing the 0↔1 Done-Task boundary
+   changes `hiddenOffset`, the scroll effect re-fires (`src/App.tsx:53`), and the
+   half-filled form scrolls out of view. Narrow — it needs a capture-and-complete while the
+   form is open — and non-destructive, since React keeps the form's state. Fixing it needs
+   a new test, so it is not a stage-3 edit.
+3. **`FIELD` draws a visible field box** (`src/components/Archive.tsx:57`,
+   `border: 1px solid var(--hairline)`), against DESIGN.md:163-164 "Inputs are bare (no
+   visible field box)". Left as shipped for the third pass running: the faithful fix is the
+   `CaptureBar.tsx:222-223` precedent — `border: none; background: transparent` inside
+   something that carries the ground — and choosing that ground for two inputs sitting
+   directly on `--surface` is a design call, not a mechanical edit. Flagged on the PR.
+4. **DESIGN.md:217 and PRODUCT.md:31 now contradict the shipped Sync row** ("Don't add
+   chrome … settings", "no settings screen"). ADR 0003 authorises the row; the two older
+   documents should be amended. Its own `docs` ticket.
+5. **Not findings, deliberately:** the `URL do Supabase` / `chave anon do Supabase` casing
+   is right as it stands — `URL` is an initialism, not a voice violation; `url.trim()` in
+   `SyncRow`'s onClick rather than in `saveConfig`, the unguarded `localStorage.setItem`,
+   and the trailing-slash paste (`https://x.supabase.co/` → `...co//rest/v1/tasks`) are
+   stage-2 judgement calls that the prior pass already recorded and that no criterion
+   reaches.
+
+**Merge:** PR opened, verdict `Approve`. Held for the human's click, per AGENTS.md
+("Merge is the human's: straight through when step 3 changed no code").
