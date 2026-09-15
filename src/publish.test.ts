@@ -105,6 +105,18 @@ describe("publish — GitHub Pages, PWA, and sync", () => {
     expect(workflow).not.toContain("VITE_SUPABASE_ANON_KEY secret is not set");
   });
 
+  it("dumps the tasks table nightly, skipping cleanly with no secret", () => {
+    const workflow = read(".github/workflows/dump.yml");
+    expect(workflow).toMatch(/schedule:\s*\n\s*- cron:\s*"0 3 \* \* \*"/);
+    expect(workflow).toMatch(/workflow_dispatch:/);
+    expect(workflow).toMatch(/no SUPABASE_DB_URL secret; skipping/);
+    expect(workflow).toMatch(/exit 0/);
+    expect(workflow).toMatch(/pg_dump.*--no-owner.*--data-only.*--table=public\.tasks/);
+    expect(workflow).toMatch(/retention-days:\s*14/);
+    expect(workflow).not.toMatch(/\n {4}env:/);
+    expect(workflow).toMatch(/\n {8}env:\s*\n {10}SUPABASE_DB_URL:\s*\$\{\{\s*secrets\.SUPABASE_DB_URL/);
+  });
+
   it("defines the canonical Task table and permits no physical delete", () => {
     const schema = read("supabase/schema.sql").toLowerCase();
     for (const column of ["id", "text", "kind", "deadline", "done", "deleted", "updatedat"]) {
