@@ -20,14 +20,86 @@ import { parseTasks, type Task } from "./store";
 
 const TABLE = "tasks";
 
+/** SLIP-35: a per-device Supabase pair, pasted into the Archive's Sync row. */
+export const SYNC_STORAGE_KEY = "sync/v1";
+
 type Config = { url: string; key: string };
 
-/** Read lazily, per call: an unconfigured app must still run, just without syncing. */
-function config(): Config | null {
+/** A stored pair with either field blank is not a pair -- fall through to env. */
+function storedConfig(): Config | null {
+  try {
+    const raw = localStorage.getItem(SYNC_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Config>;
+    if (!parsed.url || !parsed.key) return null;
+    return { url: parsed.url, key: parsed.key };
+  } catch {
+    // Corrupt or unreachable storage: as unconfigured as if nothing were stored.
+    return null;
+  }
+}
+
+function envConfig(): Config | null {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return { url, key };
+}
+
+/**
+ * Read lazily, per call: an unconfigured app must still run, just without syncing.
+ * The device-stored pair (the Archive's Sync row) wins over the build-time env pair,
+ * so a self-hoster can point one device at a different project than the one baked in.
+ */
+export function config(): Config | null {
+  return storedConfig() ?? envConfig();
+}
+
+/**
+ * `true` for a key the setup wizard already refuses (`scripts/setup-publish.sh`):
+ * the literal `service_role` / `sb_secret_` shapes, or a legacy JWT whose payload
+ * claims the `service_role` role. Never decodes or checks the signature -- only the
+ * payload segment, which is enough to catch the shape without validating the token.
+ */
+function isPrivileged(key: string): boolean {
+  const lower = key.toLowerCase();
+  if (lower.includes("service_role") || lower.startsWith("sb_secret_")) return true;
+
+  const parts = key.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+    return payload.toLowerCase().includes("service_role");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate and store the Archive's Sync row pair, or remove it when both fields are
+ * blank. Returns a one-line reason when the pair is refused, `null` on success --
+ * nothing is ever stored halfway.
+ */
+export function saveConfig(url: string, key: string): string | null {
+  if (url === "" && key === "") {
+    localStorage.removeItem(SYNC_STORAGE_KEY);
+    return null;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "URL inválida.";
+  }
+  if (parsed.protocol !== "https:") return "A URL precisa usar https.";
+  if (key === "") return "Chave vazia.";
+  if (isPrivileged(key)) {
+    return "Chave privilegiada (service_role / sb_secret_) — use a publishable/anon key.";
+  }
+
+  localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key }));
+  return null;
 }
 
 function headers(cfg: Config): Record<string, string> {
