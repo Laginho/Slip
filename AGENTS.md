@@ -18,3 +18,9 @@ Merge is the human's: straight through when step 3 changed no code, otherwise th
 
 Refactoring outside what the ticket touched is not part of the ticket — it becomes a new
 one with `**Type:** refactor`.
+
+## Bindings do fluxo (skill `ticket-flow`)
+
+- Gate: `npm test && npx tsc -b && npm run build`
+- Base branch: `main`
+- Models: stage 1 fable, stage 2 sonnet, stage 3 opus

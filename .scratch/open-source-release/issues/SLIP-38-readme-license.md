@@ -1,6 +1,7 @@
 # SLIP-38: README covers both sync paths; MIT LICENSE
 
 **Status:** ready-for-agent
+**Stage:** to-implement
 **Type:** docs
 
 **What to build:** `LICENSE` with the MIT text, "Bruno Lage", 2026, and `"license": "MIT"` in

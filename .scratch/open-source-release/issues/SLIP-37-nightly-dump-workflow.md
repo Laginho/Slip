@@ -1,6 +1,7 @@
 # SLIP-37: Optional nightly pg_dump of the tasks table
 
 **Status:** ready-for-agent
+**Stage:** to-implement
 **Type:** chore
 
 **What to build:** `.github/workflows/dump.yml` on `schedule: "0 3 * * *"` and
