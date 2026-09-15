@@ -1,7 +1,7 @@
 # SLIP-36: The Pages build runs without Supabase secrets
 
 **Status:** complete
-**Stage:** to-merge
+**Stage:** done
 **Type:** chore
 
 **What to build:** Remove the "Require Supabase secrets" step from
