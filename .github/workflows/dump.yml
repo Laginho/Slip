@@ -22,13 +22,13 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y postgresql-client
           fi
-          pg_dump "$SUPABASE_DB_URL" --no-owner --data-only --table=public.tasks \
-            > "tasks-$(date -u +%F).sql"
-          echo "dumped=true" >> "$GITHUB_OUTPUT"
+          file="tasks-$(date -u +%F).sql"
+          pg_dump "$SUPABASE_DB_URL" --no-owner --data-only --table=public.tasks > "$file"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
-        if: steps.dump.outputs.dumped == 'true'
+        if: steps.dump.outputs.file != ''
         with:
-          name: tasks-dump
-          path: tasks-*.sql
+          name: ${{ steps.dump.outputs.file }}
+          path: ${{ steps.dump.outputs.file }}
           retention-days: 14
