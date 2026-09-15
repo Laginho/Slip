@@ -14,7 +14,9 @@ copy with the newer `updatedAt` wins.
 ## Consequences
 
 - **No auth of any kind.** One user, one baked-in key. There is no account system to
-  build, and adding a second user later means designing one from scratch.
+  build, and adding a second user later means designing one from scratch. *Revisited in
+  ADR 0003: the key is no longer baked in but supplied by the user, and accounts were
+  considered and rejected.*
 - **Deletion is a flag, never a row removal.** Union sync would otherwise resurrect
   anything deleted on one device but still present on the other. Nothing is ever purged.
 - **Every task carries `updatedAt`.** It is the entire conflict-resolution mechanism.
