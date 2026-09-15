@@ -14,8 +14,12 @@ with `actions/upload-artifact`, `retention-days: 14`. The secret reaches only th
 
 Context: `.scratch/open-source-release/spec.md` (Nightly dump); ADR 0003.
 
-**Blocked by:** nothing (SLIP-36 edits `pages.yml`, a different file). SLIP-39 also edits
-`src/publish.test.ts`, so the two never run at the same time; SLIP-39 lists this one.
+**Blocked by:** nothing.
+
+Ordering note (prose, not a dependency — ids here are deliberately not in the field
+above, which the driver parses): the keyless-Pages ticket edits `pages.yml`, a different
+file. The Pages base-path ticket also edits `src/publish.test.ts`, so the two never run at
+the same time; that ticket lists this one as its blocker, which is enough.
 
 - Primary files:
   - New: `.github/workflows/dump.yml`
