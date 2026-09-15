@@ -272,9 +272,9 @@ describe("the capture pill (ticket 02)", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    // 1 Done Task: two 44px rows ("ver concluídas" + the Sync row) sit above
-    // the Open list when collapsed.
-    region.scrollTop = 16 + 2 * ARCHIVE_ROW_HEIGHT;
+    // 1 Done Task: two 44px rows ("ver concluídas" + the Sync row), plus the
+    // 12px flex gap between them, sit above the Open list when collapsed.
+    region.scrollTop = 16 + 2 * ARCHIVE_ROW_HEIGHT + 12;
 
     const field = fieldOf(container);
     field.focus();

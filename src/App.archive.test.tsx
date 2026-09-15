@@ -7,11 +7,13 @@ import { ARCHIVE_ROW_HEIGHT } from "./components/Archive";
 /**
  * Independent of App's own offset math: the top padding (16px, App.tsx's
  * `main` style) plus one 44px row per row actually rendered above the Open
- * list. Zero Done Tasks means only the collapsed Sync row; one or more means
- * "ver concluídas" *and* the Sync row -- two rows, not one.
+ * list, plus the 12px flex `gap` (App.tsx's `main` style) between rows when
+ * there are two. Zero Done Tasks means only the collapsed Sync row (no gap);
+ * one or more means "ver concluídas" *and* the Sync row -- two rows with a
+ * gap between them.
  */
 const ONE_ROW_HIDDEN = 16 + ARCHIVE_ROW_HEIGHT;
-const TWO_ROW_HIDDEN = 16 + 2 * ARCHIVE_ROW_HEIGHT;
+const TWO_ROW_HIDDEN = 16 + 2 * ARCHIVE_ROW_HEIGHT + 12;
 import {
   activate,
   click,
