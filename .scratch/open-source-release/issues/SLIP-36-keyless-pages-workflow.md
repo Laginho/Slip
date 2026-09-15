@@ -1,7 +1,7 @@
 # SLIP-36: The Pages build runs without Supabase secrets
 
-**Status:** claimed
-**Stage:** to-review
+**Status:** complete
+**Stage:** to-merge
 **Type:** chore
 
 **What to build:** Remove the "Require Supabase secrets" step from
@@ -38,3 +38,46 @@ PR handoff: after merge, the user must manually delete repository secrets
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Existing secrets remain honoured
 until removed. Review and merge remain pending; implemented in Codex with the
 user's explicit model override.
+
+---
+
+#### Resolution (2026-09-15)
+
+**Approved.** PR #30. Stage 3 changed no code — the branch merges exactly as stage 2 left
+it.
+
+**Gate, re-run independently in the worktree with both `VITE_SUPABASE_*` unset:**
+`npm test` 339 passed (14 files), `npx tsc -b` clean, `npm run lint` clean,
+`npm run build` ok. Only `.env.example` is present, so nothing supplied the vars implicitly.
+
+**Red-green proof.** Restored `main`'s `pages.yml` over the worktree and ran
+`npx vitest run src/publish.test.ts`: 1 failed / 12 passed, failing at
+`publish.test.ts:103`, `not.toContain("Require Supabase secrets")` — red because the gate
+step was still there, not from a typo. With the branch's `pages.yml` back: 13 passed.
+
+**Commit separation holds.** `b80f20c` touches `src/publish.test.ts` and this ticket only;
+`22bac3b` touches `.github/workflows/pages.yml` and this ticket only. No test file was
+edited in a code commit.
+
+**Criteria.** 1 ✅ — the gate step is gone and the Build step still carries both `env:`
+lines (`pages.yml:40-44`). 2 ✅ — `publish.test.ts` green, and it is the only test file in
+the diff. 3 ✅ — `npm run build` succeeds with both vars unset, measured above. 4 ✅ — PR
+#30's description opens with the manual step and names both secrets.
+
+**Worth noting as an improvement, not a finding.** The old assertion matched
+`\n {8}env:` anywhere in the file, so it would have passed even if the two secret
+references had lived only on the removed gate step. Scoping them to a `buildStep` slice
+closes that hole. When the slice regex fails to match, `buildStep` falls back to `""` and
+the `toMatch` calls fail loudly — no silent pass.
+
+**Standards.** No documented standard breached; the repo documents none beyond
+`orchestration.md`, whose step-2 rules are met. No smell from the baseline worth a fix: the
+three negative assertions are near-duplicates, but each pins a distinct removed artifact and
+costs nothing. `.env.example` untouched, as the spec requires. Nothing outside the ticket's
+stated surface.
+
+**Files:** `.github/workflows/pages.yml`, `src/publish.test.ts`.
+
+**Still the human's:** merging PR #30, then deleting the `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` repository secrets by hand. Until they are deleted the public
+bundle still carries the author's key.
