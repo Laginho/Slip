@@ -57,7 +57,7 @@ const FIELD: CSSProperties = {
   border: "1px solid var(--hairline)",
   borderRadius: 8,
   padding: "8px 10px",
-  fontSize: 14,
+  fontSize: 16,
   fontFamily: "inherit",
   color: "inherit",
   background: "transparent",

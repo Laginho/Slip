@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CHROME } from "./palette";
+import { archive } from "./store";
 import { useMediaQuery } from "./useMediaQuery";
 import { useSession } from "./useSession";
 import { ARCHIVE_ROW_HEIGHT, Archive } from "./components/Archive";
@@ -15,7 +16,12 @@ import { UndoToast } from "./components/UndoToast";
  * Ctrl+H toggles the Archive, except from a Card's in-place editor.
  */
 
-export const ARCHIVE_HIDDEN_OFFSET = 16 + ARCHIVE_ROW_HEIGHT;
+// The collapsed Archive is always at least the Sync row (SLIP-35), and gains a
+// second "ver concluídas" row the moment a Done Task exists -- the offset that
+// hides it above the fold has to grow with it, or the second row leaks into view.
+export function archiveHiddenOffset(hasDone: boolean): number {
+  return 16 + (hasDone ? 2 : 1) * ARCHIVE_ROW_HEIGHT;
+}
 
 export function App() {
   const { tasks, pending, saveError, capture, complete, discard, edit, undo, expire } =
@@ -23,6 +29,7 @@ export function App() {
 
   const [archiveOpen, setArchiveOpen] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
+  const hiddenOffset = archiveHiddenOffset(archive(tasks).length > 0);
 
   const toggleArchive = () => setArchiveOpen((o) => !o);
 
@@ -33,11 +40,11 @@ export function App() {
     else el.scrollTop = top;
   };
 
-  // SLIP-35: the Archive always has at least the Sync row, so it is always pullable
-  // -- there is no longer a "0 Done, nothing to reveal" case to gate on.
+  // Re-fires when a Done Task appears or disappears while collapsed, not just
+  // on open/close: the row count above the Open list changes either way.
   useEffect(() => {
-    scrollRegionTo(archiveOpen ? 0 : ARCHIVE_HIDDEN_OFFSET);
-  }, [archiveOpen]);
+    scrollRegionTo(archiveOpen ? 0 : hiddenOffset);
+  }, [archiveOpen, hiddenOffset]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -141,7 +148,7 @@ export function App() {
             flexDirection: "column",
             gap: 12,
             boxSizing: "border-box",
-            minHeight: `calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`,
+            minHeight: `calc(100% + ${hiddenOffset}px)`,
           }}
         >
           <Archive tasks={tasks} now={now} open={archiveOpen} onToggle={toggleArchive} />
