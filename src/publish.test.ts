@@ -93,13 +93,16 @@ describe("publish — GitHub Pages, PWA, and sync", () => {
     expect(workflow).not.toMatch(/cancel-in-progress:\s*true/);
   });
 
-  it("keeps Supabase secrets step-scoped and fails deployment when they are absent", () => {
+  it("allows keyless deployment while keeping optional Supabase secrets on the Build step", () => {
     const workflow = read(".github/workflows/pages.yml");
+    const buildStep = workflow.match(/      - name: Build\r?\n[\s\S]*?(?=      - name:|$)/)?.[0] ?? "";
     expect(workflow).not.toMatch(/\n {4}env:/);
-    expect(workflow).toMatch(/\n {8}env:\s*\n {10}VITE_SUPABASE_URL:\s*\$\{\{\s*secrets\.VITE_SUPABASE_URL/);
-    expect(workflow).toMatch(/\n {10}VITE_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.VITE_SUPABASE_ANON_KEY/);
-    expect(workflow).toContain("VITE_SUPABASE_URL secret is not set");
-    expect(workflow).toContain("VITE_SUPABASE_ANON_KEY secret is not set");
+    expect(buildStep).toMatch(/\n {8}env:\s*\n {10}VITE_SUPABASE_URL:\s*\$\{\{\s*secrets\.VITE_SUPABASE_URL/);
+    expect(buildStep).toMatch(/\n {10}VITE_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.VITE_SUPABASE_ANON_KEY/);
+    expect(buildStep).toContain("run: npm run build");
+    expect(workflow).not.toContain("Require Supabase secrets");
+    expect(workflow).not.toContain("VITE_SUPABASE_URL secret is not set");
+    expect(workflow).not.toContain("VITE_SUPABASE_ANON_KEY secret is not set");
   });
 
   it("defines the canonical Task table and permits no physical delete", () => {
