@@ -1,7 +1,7 @@
 # SLIP-37: Optional nightly pg_dump of the tasks table
 
 **Status:** complete
-**Stage:** blocked
+**Stage:** done
 **Type:** chore
 
 **What to build:** `.github/workflows/dump.yml` on `schedule: "0 3 * * *"` and
@@ -146,5 +146,3 @@ indistinguishable to it. `sweatshop/2026-09-15-1701` was created at 17:01 and th
 last row is SLIP-37 reaching `to-review` at 17:03, so the run is live and a PR to `main`
 would have stranded it. Not pushed: the driver pushes and opens the session PR when the run
 stops.
-
-- 2026-09-15 Review ended at reviewing (exit 0); branch slip-37 holds the review; left for a human
