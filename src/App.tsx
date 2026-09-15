@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { CHROME } from "./palette";
 import { useMediaQuery } from "./useMediaQuery";
 import { useSession } from "./useSession";
-import { archive } from "./store";
 import { ARCHIVE_ROW_HEIGHT, Archive } from "./components/Archive";
 import { CaptureBar } from "./components/CaptureBar";
 import { TaskList } from "./components/TaskList";
@@ -25,8 +24,6 @@ export function App() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
 
-  const hasArchive = archive(tasks).length > 0;
-
   const toggleArchive = () => setArchiveOpen((o) => !o);
 
   const scrollRegionTo = (top: number) => {
@@ -36,10 +33,11 @@ export function App() {
     else el.scrollTop = top;
   };
 
+  // SLIP-35: the Archive always has at least the Sync row, so it is always pullable
+  // -- there is no longer a "0 Done, nothing to reveal" case to gate on.
   useEffect(() => {
-    if (!hasArchive) return;
     scrollRegionTo(archiveOpen ? 0 : ARCHIVE_HIDDEN_OFFSET);
-  }, [archiveOpen, hasArchive]);
+  }, [archiveOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,13 +46,12 @@ export function App() {
       const target = event.target;
       // A Card's in-place editor: the only <textarea> that lives inside an <li>.
       if (target instanceof HTMLTextAreaElement && target.closest("li") !== null) return;
-      if (!hasArchive) return; // nothing to show: leave the browser's Ctrl+H alone
       event.preventDefault();
       setArchiveOpen((o) => !o);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hasArchive]);
+  }, []);
 
   /**
    * Layout breakpoints. Inline styles cannot express a media query, so the
@@ -144,7 +141,7 @@ export function App() {
             flexDirection: "column",
             gap: 12,
             boxSizing: "border-box",
-            minHeight: hasArchive ? `calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)` : undefined,
+            minHeight: `calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`,
           }}
         >
           <Archive tasks={tasks} now={now} open={archiveOpen} onToggle={toggleArchive} />
