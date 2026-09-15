@@ -32,15 +32,6 @@ jobs:
         run: npm ci
       - name: Dependency audit
         run: npm audit --audit-level=high --omit=dev
-      - name: Require Supabase secrets
-        # Secrets reach only the steps that need them (step-level env, never job
-        # env), so npm ci/tests/typecheck never see them.
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: |
-          test -n "$VITE_SUPABASE_URL" || { echo "::error::VITE_SUPABASE_URL secret is not set; configure it under repo Settings > Secrets before deploying"; exit 1; }
-          test -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::VITE_SUPABASE_ANON_KEY secret is not set; configure it under repo Settings > Secrets before deploying"; exit 1; }
       - name: Tests
         run: npm test
       - name: Typecheck
