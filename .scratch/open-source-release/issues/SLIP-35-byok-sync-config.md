@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** complete
-**Stage:** to-merge
+**Stage:** done
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
