@@ -169,7 +169,7 @@ describe("pull to reveal the Archive", () => {
     expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
   });
 
-  it("row 6 — 2 Open, 0 Done: no 'ver concluídas', main.style.minHeight === '', region.scrollTop === 0", async () => {
+  it("row 6 — 2 Open, 0 Done (SLIP-35): no 'ver concluídas', but the Sync row keeps the Archive pullable", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "o2", text: "ligar dentista" }),
@@ -179,8 +179,9 @@ describe("pull to reveal the Archive", () => {
     const region = main.parentElement as HTMLElement;
 
     expect(main.textContent).not.toContain("ver concluídas");
-    expect(main.style.minHeight).toBe("");
-    expect(region.scrollTop).toBe(0);
+    expect(main.textContent).toContain("sincronizar");
+    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
+    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
   });
 
   it("row 7 — 0 Open, 1 Done: link present, main minHeight declared, region.scrollTop === ARCHIVE_HIDDEN_OFFSET", async () => {
@@ -256,7 +257,7 @@ describe("pull to reveal the Archive", () => {
     expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
   });
 
-  it("row 10 — 2 Open, 1 Done: main.children[0] is Archive row, main.children.length === 2 (ticket-04 shape intact)", async () => {
+  it("row 10 — 2 Open, 1 Done: main.children[0] is Archive row, Sync row and TaskList follow (SLIP-35 shape)", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "o2", text: "ligar dentista" }),
@@ -265,10 +266,11 @@ describe("pull to reveal the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
 
-    // The Archive link row is the first child, TaskList is the second
+    // The Archive link row is the first child, the Sync row second, TaskList third
     const firstChild = main.children[0] as HTMLElement;
     expect(firstChild.textContent).toContain("ver concluídas");
-    expect(main.children.length).toBe(2);
+    expect(main.children.length).toBe(3);
+    expect(main.children[1].textContent).toContain("sincronizar");
   });
 });
 
@@ -639,19 +641,23 @@ describe("Ctrl+H toggles the Archive", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("row 8 — 2 Open, 0 Done: Ctrl+H does nothing; defaultPrevented false; no throw", async () => {
+  it("row 8 — 2 Open, 0 Done (SLIP-35): Ctrl+H reveals the Sync row; no throw", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "o2", text: "ligar dentista" }),
     ]);
     const container = await render(<App />);
     const main = container.querySelector("main")!;
+    const region = main.parentElement as HTMLElement;
+    region.scrollTop = ARCHIVE_HIDDEN_OFFSET; // starts hidden
 
     const event = keyEvent("H", { ctrlKey: true });
     await dispatch(event, window);
 
     expect(main.textContent).not.toContain("concluídas");
-    expect(event.defaultPrevented).toBe(false);
+    expect(main.textContent).toContain("sincronizar");
+    expect(region.scrollTop).toBe(0);
+    expect(event.defaultPrevented).toBe(true);
   });
 
   it("row 9 — desktop + Ctrl+H: opens archive (same as row 1 but with desktop media)", async () => {
