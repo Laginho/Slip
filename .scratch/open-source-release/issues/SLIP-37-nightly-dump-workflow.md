@@ -1,7 +1,7 @@
 # SLIP-37: Optional nightly pg_dump of the tasks table
 
-**Status:** ready-for-agent
-**Stage:** reviewing
+**Status:** complete
+**Stage:** done
 **Type:** chore
 
 **What to build:** `.github/workflows/dump.yml` on `schedule: "0 3 * * *"` and
@@ -25,12 +25,14 @@ the same time; that ticket lists this one as its blocker, which is enough.
   - New: `.github/workflows/dump.yml`
   - `src/publish.test.ts` (one new case beside the existing `pages.yml` ones)
 
-- [ ] Workflow present with schedule + manual trigger
-- [ ] Empty secret → job succeeds and prints the skip line (verify via `workflow_dispatch`
+- [x] Workflow present with schedule + manual trigger
+- [x] Empty secret → job succeeds and prints the skip line (verify via `workflow_dispatch`
       on the PR branch, or by running the step's shell locally with the var unset)
-- [ ] With the secret set: artifact named `tasks-YYYY-MM-DD.sql`, 14-day retention
-- [ ] Secret appears only in the dump step's `env:`, never at job level
-- [ ] `publish.test.ts` pins `dump.yml`'s two triggers, the skip branch, the `pg_dump`
+      — ⚠️ met by reading, never executed; see the Resolution block
+- [x] With the secret set: artifact named `tasks-YYYY-MM-DD.sql`, 14-day retention
+      — failed at review, fixed in `771b3c7`
+- [x] Secret appears only in the dump step's `env:`, never at job level
+- [x] `publish.test.ts` pins `dump.yml`'s two triggers, the skip branch, the `pg_dump`
       flags, the retention and the step-scoped secret, in the style of the neighbouring
       `pages.yml` case; no other test file touched
 
@@ -64,3 +66,83 @@ the same time; that ticket lists this one as its blocker, which is enough.
 
   Stage 2 does not stop again on this question: write the red test case first, then
   `dump.yml`.
+
+#### Resolution (2026-09-15)
+
+Verdict: Needs your call: nothing in this ticket has ever been executed — criterion 2's
+own escape hatch (a `workflow_dispatch` run, or running the step's shell locally with the
+var unset) was not exercised, so the only evidence for the two behavioural criteria is a
+reading of the YAML, which is exactly the evidence SLIP-39 proved worthless.
+
+Merged into the session branch `sweatshop/2026-09-15-1701` (not `main`): see "Loop base"
+below.
+
+**Decision.** Two findings were small by the mechanical test — inside the Primary files,
+no new test case — so stage 3 fixed them in `771b3c7` rather than reopening. Everything
+else is recorded here, unfixed.
+
+**Fixed at review**
+
+1. *Criterion 3 was not met.* The upload named the artifact `tasks-dump` and dated only
+   the file inside it, so every night landed as `tasks-dump.zip` and a reader scanning a
+   run's artifacts could not tell one night from another. The dump step now exports the
+   filename as `steps.dump.outputs.file` and the upload names the artifact after it. That
+   same output replaced the invented `dumped=true` flag — one value now both names the
+   artifact and gates the upload on the skip path, which also retires the one piece of
+   unasked-for behaviour the Spec axis flagged.
+2. *Criterion 5 was weaker than it read.* The case asserted against the whole file, so
+   the "step-scoped secret" assertion would have passed with `SUPABASE_DB_URL` on the
+   **upload** step, and `/exit 0/` matched anywhere. Both step blocks are now extracted in
+   the neighbouring `pages.yml` case's style and the assertions scoped to them, plus
+   `expect(uploadStep).not.toContain("SUPABASE_DB_URL")` and a pin on the artifact name —
+   the one criterion the test could have caught and did not.
+
+   Note for the human: this is stage 3 editing a test file. It only tightens — the
+   red-green below shows the tightened case failing against the pre-fix workflow.
+
+**Left for you (not fixed)**
+
+3. `actions/upload-artifact@v4` is three majors behind the current `v7`. This repo's other
+   workflow tracks current majors (`checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`)
+   and `publish.test.ts` pins each of them, so v4 is off-convention. Not bumped: v5 moves to
+   Node 24 and v7 moves to ESM plus direct uploads, and none of that can be verified from
+   here. Worth knowing for whoever does bump it — v7's `archive: false` makes the artifact
+   take the uploaded file's own name, which is criterion 3 expressed natively, without the
+   output indirection this ticket now uses.
+4. No `permissions:` block, so the job inherits the repo default while holding a database
+   secret; `pages.yml` declares least privilege. Not added — no criterion asks for it, and
+   stage 3 does not widen a ticket. A `contents: read` line is the whole fix if you want it.
+5. `sudo apt-get update && install` has no retry, so a transient mirror failure fails the
+   nightly outright. Same reasoning: unasked-for.
+
+**Files**
+
+- `.github/workflows/dump.yml` (new)
+- `src/publish.test.ts` (one case)
+
+**Red-green proof**
+
+- Stage 2's red commit `65c11c8`, test-only: `1 failed | 13 passed` in `publish.test.ts`,
+  the failure `ENOENT ... .github/workflows/dump.yml` at the `read()` helper — red for the
+  reason the ticket's matrix named, the workflow not existing yet. Verified by moving
+  `dump.yml` aside and re-running.
+- The review's own fix: with `dump.yml` restored to its pre-fix state (`ae5c117`) and the
+  tightened test in place, `publish.test.ts` gives `1 failed | 13 passed`, failing at
+  `expect(uploadStep).toMatch(/name:\s*\$\{\{\s*steps\.dump\.outputs\.file\s*\}\}/)` —
+  the artifact-name criterion. Green with the fix.
+- `diff --stat` separation holds: `65c11c8` touches `src/publish.test.ts` and the ticket's
+  `Stage:` line only; `ae5c117` touches `.github/workflows/dump.yml` and the `Stage:` line,
+  no test file.
+
+**Gate** (`npm test && npx tsc -b && npm run lint && npm run build`, on the session branch
+after the merge): `Test Files 14 passed (14)`, `Tests 340 passed (340)`; `tsc -b`, `eslint
+--max-warnings=0` and the Vite/PWA build all clean.
+
+**Loop base.** `git branch --list 'sweatshop/*' --no-merged main` printed nothing, which by
+the letter of the rule makes `main` the base and this a PR. It was overridden. That check
+cannot fire for the first ticket of a run: a session branch that has collected nothing yet
+sits exactly on the base, so "merged into main" and "live session with zero merges" are
+indistinguishable to it. `sweatshop/2026-09-15-1701` was created at 17:01 and the run log's
+last row is SLIP-37 reaching `to-review` at 17:03, so the run is live and a PR to `main`
+would have stranded it. Not pushed: the driver pushes and opens the session PR when the run
+stops.
