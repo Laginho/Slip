@@ -1,8 +1,17 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { App, ARCHIVE_HIDDEN_OFFSET } from "./App";
+import { App } from "./App";
 import { STORAGE_KEY } from "./store";
 import { ARCHIVE_ROW_HEIGHT } from "./components/Archive";
+
+/**
+ * Independent of App's own offset math: the top padding (16px, App.tsx's
+ * `main` style) plus one 44px row per row actually rendered above the Open
+ * list. Zero Done Tasks means only the collapsed Sync row; one or more means
+ * "ver concluídas" *and* the Sync row -- two rows, not one.
+ */
+const ONE_ROW_HIDDEN = 16 + ARCHIVE_ROW_HEIGHT;
+const TWO_ROW_HIDDEN = 16 + 2 * ARCHIVE_ROW_HEIGHT;
 import {
   activate,
   click,
@@ -77,7 +86,7 @@ describe("pull to reveal the Archive", () => {
     // Region declarations
     expect(region.style.overscrollBehavior).toBe("contain");
     // Content declarations
-    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
+    expect(main.style.minHeight).toBe(`calc(100% + ${TWO_ROW_HIDDEN}px)`);
     expect(main.style.boxSizing).toBe("border-box");
     // Link row <p> height
     const linkRow = main.querySelector("p") as HTMLElement;
@@ -85,7 +94,7 @@ describe("pull to reveal the Archive", () => {
     expect(linkRow.style.height).toBe(`${ARCHIVE_ROW_HEIGHT}px`);
   });
 
-  it("row 2 — 2 Open, 1 Done: region.scrollTop === ARCHIVE_HIDDEN_OFFSET right after mount", async () => {
+  it("row 2 — 2 Open, 1 Done: region.scrollTop hides both the link row and the Sync row (SLIP-35 review regression)", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "o2", text: "ligar dentista" }),
@@ -95,7 +104,10 @@ describe("pull to reveal the Archive", () => {
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
 
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    // A collapsed Archive with a Done Task renders two 44px rows above the Open
+    // list ("ver concluídas" then the Sync row). A scrollTop sized for one row
+    // leaves "sincronizar" sitting above the Open list instead of hidden.
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 
   it("row 3 — scrolled to 0: 'ver concluídas' present, no Done text, button still reads 'ver concluídas'", async () => {
@@ -143,7 +155,7 @@ describe("pull to reveal the Archive", () => {
     expect(region.scrollTop).toBe(0);
   });
 
-  it("row 5 — open, click 'ocultar concluídas': Done text gone, region.scrollTop returns to ARCHIVE_HIDDEN_OFFSET", async () => {
+  it("row 5 — open, click 'ocultar concluídas': Done text gone, region.scrollTop hides both rows again", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "o2", text: "ligar dentista" }),
@@ -166,7 +178,7 @@ describe("pull to reveal the Archive", () => {
     await click(closeBtn);
 
     expect(main.textContent).not.toContain("entregar relatório");
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 
   it("row 6 — 2 Open, 0 Done (SLIP-35): no 'ver concluídas', but the Sync row keeps the Archive pullable", async () => {
@@ -180,11 +192,11 @@ describe("pull to reveal the Archive", () => {
 
     expect(main.textContent).not.toContain("ver concluídas");
     expect(main.textContent).toContain("sincronizar");
-    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(main.style.minHeight).toBe(`calc(100% + ${ONE_ROW_HIDDEN}px)`);
+    expect(region.scrollTop).toBe(ONE_ROW_HIDDEN);
   });
 
-  it("row 7 — 0 Open, 1 Done: link present, main minHeight declared, region.scrollTop === ARCHIVE_HIDDEN_OFFSET", async () => {
+  it("row 7 — 0 Open, 1 Done: link present, main minHeight declared, region.scrollTop hides both rows", async () => {
     seedStorage([
       task({ id: "d1", text: "entregar relatório", done: true, updatedAt: TODAY.getTime() }),
     ]);
@@ -193,8 +205,8 @@ describe("pull to reveal the Archive", () => {
     const region = main.parentElement as HTMLElement;
 
     expect(main.textContent).toContain("ver concluídas");
-    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(main.style.minHeight).toBe(`calc(100% + ${TWO_ROW_HIDDEN}px)`);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 
   it("row 8 — desktop: same four declarations as row 1; Open <ul> still display:grid", async () => {
@@ -210,7 +222,7 @@ describe("pull to reveal the Archive", () => {
     const region = main.parentElement as HTMLElement;
 
     expect(region.style.overscrollBehavior).toBe("contain");
-    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
+    expect(main.style.minHeight).toBe(`calc(100% + ${TWO_ROW_HIDDEN}px)`);
     expect(main.style.boxSizing).toBe("border-box");
     const linkRow = main.querySelector("p") as HTMLElement;
     expect(linkRow.style.height).toBe(`${ARCHIVE_ROW_HEIGHT}px`);
@@ -220,7 +232,7 @@ describe("pull to reveal the Archive", () => {
     expect(getComputedStyle(openList).display).toBe("grid");
   });
 
-  it("row 9 — 1 Open, 1 Done: complete + undo, region.scrollTop === ARCHIVE_HIDDEN_OFFSET after each step", async () => {
+  it("row 9 — 1 Open, 1 Done: complete + undo, region.scrollTop hides both rows after each step", async () => {
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
       task({ id: "d1", text: "entregar relatório", done: true, updatedAt: TODAY.getTime() }),
@@ -231,7 +243,7 @@ describe("pull to reveal the Archive", () => {
 
     // Complete the Open task
     await activate(queryLabel(container, "Concluir")!);
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
 
     // Undo the completion
     const undoBtn = [...main.querySelectorAll("button")].find(
@@ -240,21 +252,26 @@ describe("pull to reveal the Archive", () => {
     // If the toast is visible, undo it
     if (undoBtn) {
       await click(undoBtn);
-      expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+      expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
     }
   });
 
-  it("first completion hides the newly-created Archive row without moving the Open list", async () => {
+  it("first completion grows the hidden offset so the newly-created 'ver concluídas' row stays out of view", async () => {
     seedStorage([task({ id: "o1", text: "comprar leite" })]);
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
 
+    // Before completion: 0 Done, only the Sync row -- one row's worth of offset.
+    expect(region.scrollTop).toBe(ONE_ROW_HIDDEN);
+
     await activate(queryLabel(container, "Concluir")!);
 
+    // After: "ver concluídas" joins the Sync row above the Open list -- the
+    // offset must grow to two rows, or the new link row leaks into view.
     expect(main.textContent).toContain("ver concluídas");
-    expect(main.style.minHeight).toBe(`calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)`);
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(main.style.minHeight).toBe(`calc(100% + ${TWO_ROW_HIDDEN}px)`);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 
   it("row 10 — 2 Open, 1 Done: main.children[0] is Archive row, Sync row and TaskList follow (SLIP-35 shape)", async () => {
@@ -531,7 +548,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    region.scrollTop = ARCHIVE_HIDDEN_OFFSET; // starts hidden
+    region.scrollTop = TWO_ROW_HIDDEN; // starts hidden
 
     const event = keyEvent("H", { ctrlKey: true });
     await dispatch(event, window);
@@ -542,7 +559,7 @@ describe("Ctrl+H toggles the Archive", () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it("row 2 — open: Ctrl+H closes archive; Done text gone; scrollTop ARCHIVE_HIDDEN_OFFSET", async () => {
+  it("row 2 — open: Ctrl+H closes archive; Done text gone; scrollTop hides both rows", async () => {
     seedTwoOpenOneDone();
     const container = await render(<App />);
     const main = container.querySelector("main")!;
@@ -559,7 +576,7 @@ describe("Ctrl+H toggles the Archive", () => {
 
     expect(main.textContent).toContain("ver concluídas");
     expect(main.textContent).not.toContain("entregar relatório");
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 
   it("row 3 — Ctrl+Shift+H: still closed; defaultPrevented false", async () => {
@@ -580,7 +597,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    region.scrollTop = ARCHIVE_HIDDEN_OFFSET;
+    region.scrollTop = TWO_ROW_HIDDEN;
 
     const event = keyEvent("h", { ctrlKey: true });
     await dispatch(event, window);
@@ -608,7 +625,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    region.scrollTop = ARCHIVE_HIDDEN_OFFSET;
+    region.scrollTop = TWO_ROW_HIDDEN;
 
     const textarea = container.querySelector<HTMLTextAreaElement>('textarea[aria-label="nova tarefa"]')!;
     typeInto(textarea, "abc");
@@ -649,7 +666,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    region.scrollTop = ARCHIVE_HIDDEN_OFFSET; // starts hidden
+    region.scrollTop = ONE_ROW_HIDDEN; // starts hidden
 
     const event = keyEvent("H", { ctrlKey: true });
     await dispatch(event, window);
@@ -666,7 +683,7 @@ describe("Ctrl+H toggles the Archive", () => {
     const container = await render(<App />);
     const main = container.querySelector("main")!;
     const region = main.parentElement as HTMLElement;
-    region.scrollTop = ARCHIVE_HIDDEN_OFFSET;
+    region.scrollTop = TWO_ROW_HIDDEN;
 
     const event = keyEvent("H", { ctrlKey: true });
     await dispatch(event, window);
@@ -689,7 +706,7 @@ describe("Ctrl+H toggles the Archive", () => {
     spy.mockRestore();
   });
 
-  it("row 11 — open via click then Ctrl+H closes: shared state; scrollTop ARCHIVE_HIDDEN_OFFSET", async () => {
+  it("row 11 — open via click then Ctrl+H closes: shared state; scrollTop hides both rows", async () => {
     seedTwoOpenOneDone();
     const container = await render(<App />);
     const main = container.querySelector("main")!;
@@ -708,6 +725,6 @@ describe("Ctrl+H toggles the Archive", () => {
 
     expect(main.textContent).toContain("ver concluídas");
     expect(main.textContent).not.toContain("entregar relatório");
-    expect(region.scrollTop).toBe(ARCHIVE_HIDDEN_OFFSET);
+    expect(region.scrollTop).toBe(TWO_ROW_HIDDEN);
   });
 });
