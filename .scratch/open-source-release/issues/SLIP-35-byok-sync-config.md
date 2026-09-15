@@ -17,7 +17,7 @@ Capture pill or the Cards changes.
 Context: `.scratch/open-source-release/spec.md` (Implementation Decisions → configuration,
 validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/components/Archive.tsx`
 `LINK_ROW`; `src/App.tsx` lines gated by `hasArchive`; the privileged-key rule in
-`.scratch/polish-and-publish/setup-ticket-06.sh`.
+`scripts/setup-publish.sh`.
 
 **Blocked by:** nothing.
 
