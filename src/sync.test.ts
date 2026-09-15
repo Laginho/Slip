@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Task } from "./store";
-import { merge, sync } from "./sync";
+import { config, merge, saveConfig, sync, SYNC_STORAGE_KEY } from "./sync";
 import { task } from "./testing";
 
 beforeEach(() => {
@@ -124,7 +124,112 @@ describe("merge — beyond the table", () => {
   });
 });
 
+/**
+ * SLIP-35: config() reads a device-stored pair before the build-time env pair.
+ */
+describe("config — device pair before env pair", () => {
+  it("returns the stored pair when both fields are non-empty", () => {
+    localStorage.setItem(
+      SYNC_STORAGE_KEY,
+      JSON.stringify({ url: "https://mine.supabase.co", key: "mine-key" }),
+    );
+    expect(config()).toEqual({ url: "https://mine.supabase.co", key: "mine-key" });
+  });
+
+  it("falls back to the env pair when nothing is stored", () => {
+    expect(config()).toEqual({ url: "https://example.supabase.co", key: "test-key" });
+  });
+
+  it("ignores a stored pair with one empty field, falling back to env", () => {
+    localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url: "https://mine.supabase.co", key: "" }));
+    expect(config()).toEqual({ url: "https://example.supabase.co", key: "test-key" });
+  });
+
+  it("returns null when neither a stored nor an env pair is complete", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "");
+    expect(config()).toBeNull();
+  });
+});
+
+describe("saveConfig — validate and store the device pair", () => {
+  it("stores a valid https pair under sync/v1 and returns no error", () => {
+    expect(saveConfig("https://mine.supabase.co", "anon-key")).toBeNull();
+    expect(JSON.parse(localStorage.getItem(SYNC_STORAGE_KEY)!)).toEqual({
+      url: "https://mine.supabase.co",
+      key: "anon-key",
+    });
+  });
+
+  it("refuses an http URL and stores nothing", () => {
+    expect(saveConfig("http://mine.supabase.co", "anon-key")).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("refuses an unparseable URL and stores nothing", () => {
+    expect(saveConfig("not a url", "anon-key")).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("refuses an empty key and stores nothing", () => {
+    expect(saveConfig("https://mine.supabase.co", "")).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("refuses a service_role key and stores nothing", () => {
+    expect(saveConfig("https://mine.supabase.co", "service_role-secret")).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("refuses an sb_secret_ prefixed key and stores nothing", () => {
+    expect(saveConfig("https://mine.supabase.co", "sb_secret_abc123")).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("refuses a legacy JWT whose payload claims service_role", () => {
+    const payload = btoa(JSON.stringify({ role: "service_role" }));
+    const jwt = `header.${payload}.signature`;
+    expect(saveConfig("https://mine.supabase.co", jwt)).not.toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("accepts a legacy JWT whose payload claims anon", () => {
+    const payload = btoa(JSON.stringify({ role: "anon" }));
+    const jwt = `header.${payload}.signature`;
+    expect(saveConfig("https://mine.supabase.co", jwt)).toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).not.toBeNull();
+  });
+
+  it("removes sync/v1 when both fields are saved empty", () => {
+    localStorage.setItem(
+      SYNC_STORAGE_KEY,
+      JSON.stringify({ url: "https://mine.supabase.co", key: "anon-key" }),
+    );
+    expect(saveConfig("", "")).toBeNull();
+    expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
+  });
+
+  it("returns a reason instead of throwing when the write is refused", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota");
+    });
+    expect(saveConfig("https://mine.supabase.co", "anon-key")).toBe("não foi possível salvar");
+  });
+});
+
 describe("sync", () => {
+  it("uses a pair saved via saveConfig on the very next call, without a reload", async () => {
+    saveConfig("https://device.supabase.co", "device-key");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([]));
+
+    await sync([task({ id: "a" })]);
+
+    expect(fetchSpy.mock.calls[0][0]).toBe("https://device.supabase.co/rest/v1/tasks?select=*");
+    expect((fetchSpy.mock.calls[0][1] as RequestInit).headers).toMatchObject({
+      apikey: "device-key",
+    });
+  });
+
   it("does nothing and never touches the network when unconfigured", async () => {
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_ANON_KEY", "");

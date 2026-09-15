@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { CHROME } from "./palette";
+import { archive } from "./store";
 import { useMediaQuery } from "./useMediaQuery";
 import { useSession } from "./useSession";
-import { archive } from "./store";
 import { ARCHIVE_ROW_HEIGHT, Archive } from "./components/Archive";
 import { CaptureBar } from "./components/CaptureBar";
 import { TaskList } from "./components/TaskList";
@@ -16,7 +16,18 @@ import { UndoToast } from "./components/UndoToast";
  * Ctrl+H toggles the Archive, except from a Card's in-place editor.
  */
 
-export const ARCHIVE_HIDDEN_OFFSET = 16 + ARCHIVE_ROW_HEIGHT;
+// `main` below is a flex column with this gap between its children -- two
+// collapsed Archive rows sit this far apart, not stacked flush.
+const MAIN_GAP = 12;
+
+// The collapsed Archive is always at least the Sync row (SLIP-35), and gains a
+// second "ver concluídas" row the moment a Done Task exists -- the offset that
+// hides it above the fold has to grow with it (row height *and* the gap
+// between rows), or the second row leaks into view.
+export function archiveHiddenOffset(hasDone: boolean): number {
+  const rows = hasDone ? 2 : 1;
+  return 16 + rows * ARCHIVE_ROW_HEIGHT + (rows - 1) * MAIN_GAP;
+}
 
 export function App() {
   const { tasks, pending, saveError, capture, complete, discard, edit, undo, expire } =
@@ -24,8 +35,7 @@ export function App() {
 
   const [archiveOpen, setArchiveOpen] = useState(false);
   const regionRef = useRef<HTMLDivElement>(null);
-
-  const hasArchive = archive(tasks).length > 0;
+  const hiddenOffset = archiveHiddenOffset(archive(tasks).length > 0);
 
   const toggleArchive = () => setArchiveOpen((o) => !o);
 
@@ -36,10 +46,11 @@ export function App() {
     else el.scrollTop = top;
   };
 
+  // Re-fires when a Done Task appears or disappears while collapsed, not just
+  // on open/close: the row count above the Open list changes either way.
   useEffect(() => {
-    if (!hasArchive) return;
-    scrollRegionTo(archiveOpen ? 0 : ARCHIVE_HIDDEN_OFFSET);
-  }, [archiveOpen, hasArchive]);
+    scrollRegionTo(archiveOpen ? 0 : hiddenOffset);
+  }, [archiveOpen, hiddenOffset]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,13 +59,12 @@ export function App() {
       const target = event.target;
       // A Card's in-place editor: the only <textarea> that lives inside an <li>.
       if (target instanceof HTMLTextAreaElement && target.closest("li") !== null) return;
-      if (!hasArchive) return; // nothing to show: leave the browser's Ctrl+H alone
       event.preventDefault();
       setArchiveOpen((o) => !o);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hasArchive]);
+  }, []);
 
   /**
    * Layout breakpoints. Inline styles cannot express a media query, so the
@@ -142,9 +152,9 @@ export function App() {
             padding: "16px 16px 6px",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: MAIN_GAP,
             boxSizing: "border-box",
-            minHeight: hasArchive ? `calc(100% + ${ARCHIVE_HIDDEN_OFFSET}px)` : undefined,
+            minHeight: `calc(100% + ${hiddenOffset}px)`,
           }}
         >
           <Archive tasks={tasks} now={now} open={archiveOpen} onToggle={toggleArchive} />

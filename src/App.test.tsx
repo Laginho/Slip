@@ -233,12 +233,14 @@ describe("undo under a failing write", () => {
 });
 
 describe("storage refusing reads", () => {
-  it("renders an empty app instead of crashing when getItem throws", async () => {
+  it("renders an empty task list instead of crashing when getItem throws", async () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("denied");
     });
     const container = await render(<App />);
-    expect(container.querySelector("main")!.textContent).toBe("");
+    // The Archive is unconditionally reachable now (SLIP-35's Sync row), so the
+    // only text left in an empty app is that row's own collapsed label.
+    expect(container.querySelector("main")!.textContent).toBe("sincronizar");
     expect(container.querySelector('textarea[placeholder="uma tarefa..."]')).not.toBeNull();
   });
 });
@@ -640,7 +642,7 @@ describe("Archive at the top", () => {
     expect(main.textContent).toContain("ver concluídas");
   });
 
-  it("row 5 — 2 Open, 0 Done: no 'ver concluídas' anywhere; first child is the Open list", async () => {
+  it("row 5 — 2 Open, 0 Done: no 'ver concluídas'; the Sync row is first, the Open list follows", async () => {
     vi.setSystemTime(TODAY);
     seedStorage([
       task({ id: "o1", text: "comprar leite" }),
@@ -650,16 +652,17 @@ describe("Archive at the top", () => {
     const main = container.querySelector("main")!;
 
     expect(main.textContent).not.toContain("ver concluídas");
-    expect(main.children[0].matches('ul[role="list"]')).toBe(true);
+    expect(main.children[0].matches('ul[role="list"]')).toBe(false);
+    expect(main.querySelector('ul[role="list"]')).not.toBeNull();
   });
 
-  it("row 6 — 0 Open, 0 Done: scrolling region has no text content; no empty-state copy", async () => {
+  it("row 6 — 0 Open, 0 Done: only the Sync row's collapsed label remains", async () => {
     vi.setSystemTime(TODAY);
     seedStorage([]);
     const container = await render(<App />);
     const main = container.querySelector("main")!;
 
-    expect(main.textContent?.trim()).toBe("");
+    expect(main.textContent?.trim()).toBe("sincronizar");
   });
 
   it("row 7 — 0 Open, 1 Done: only the Archive link exists in the region", async () => {
@@ -741,7 +744,7 @@ describe("Archive at the top", () => {
     expect(toast).not.toBeNull();
     expect(main.contains(toast)).toBe(false); // the toast is in the fixed layer, outside the region
     expect(main.querySelector('ul[role="list"]')).toBeNull(); // the last Open Task left; the Open list renders nothing
-    expect(main.children.length).toBe(1); // only the Archive remains
+    expect(main.children.length).toBe(2); // the Archive link and the Sync row remain
     // Archive link still first
     const firstChild = main.children[0] as HTMLElement;
     expect(firstChild.textContent).toContain("ver concluídas");
