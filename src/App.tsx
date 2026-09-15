@@ -16,11 +16,17 @@ import { UndoToast } from "./components/UndoToast";
  * Ctrl+H toggles the Archive, except from a Card's in-place editor.
  */
 
+// `main` below is a flex column with this gap between its children -- two
+// collapsed Archive rows sit this far apart, not stacked flush.
+const MAIN_GAP = 12;
+
 // The collapsed Archive is always at least the Sync row (SLIP-35), and gains a
 // second "ver concluídas" row the moment a Done Task exists -- the offset that
-// hides it above the fold has to grow with it, or the second row leaks into view.
+// hides it above the fold has to grow with it (row height *and* the gap
+// between rows), or the second row leaks into view.
 export function archiveHiddenOffset(hasDone: boolean): number {
-  return 16 + (hasDone ? 2 : 1) * ARCHIVE_ROW_HEIGHT;
+  const rows = hasDone ? 2 : 1;
+  return 16 + rows * ARCHIVE_ROW_HEIGHT + (rows - 1) * MAIN_GAP;
 }
 
 export function App() {
@@ -146,7 +152,7 @@ export function App() {
             padding: "16px 16px 6px",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: MAIN_GAP,
             boxSizing: "border-box",
             minHeight: `calc(100% + ${hiddenOffset}px)`,
           }}
