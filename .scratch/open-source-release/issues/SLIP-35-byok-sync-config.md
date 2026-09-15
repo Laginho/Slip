@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** ready-for-agent
-**Stage:** to-implement
+**Stage:** to-review
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -22,13 +22,37 @@ validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/compone
 
 **Blocked by:** nothing.
 
-- [ ] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
+- [x] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
       field is ignored, not half-used
-- [ ] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
+- [x] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
       no element added to the main chrome
-- [ ] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
-- [ ] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
+- [x] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
+- [x] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
       not stored, one-line reason shown
-- [ ] Both fields empty + Save removes `sync/v1`; `sync()` then returns local untouched
-- [ ] Archive reachable (toggle, pull, Ctrl+H) with zero Done Tasks, showing only the Sync row
-- [ ] Existing Archive tests, `sync.test.ts` and `useSession.test.tsx` still green
+- [x] Both fields empty + Save removes `sync/v1`; `sync()` then returns local untouched
+- [x] Archive reachable (toggle, pull, Ctrl+H) with zero Done Tasks, showing only the Sync row
+- [x] Existing Archive tests, `sync.test.ts` and `useSession.test.tsx` still green
+
+## Comments
+
+Implemented test-first, four vertical slices:
+1. `config()` precedence + `saveConfig()` validation in `src/sync.ts` (new exports:
+   `SYNC_STORAGE_KEY`, `config`, `saveConfig`).
+2. The Sync row in `src/components/Archive.tsx` (collapsed "sincronizar" link, expands
+   in place into a URL input, a key input, a Save button, and a one-line error).
+3. `src/App.tsx`: removed the `hasArchive` gate on the scroll-reveal effect, the Ctrl+H
+   handler and the `minHeight` offset -- the Sync row means the Archive is never truly
+   empty.
+4. A regression-locking test that `sync()` itself (not just `config()`) picks up a
+   `saveConfig()` pair on its very next call.
+
+Existing tests updated for the intentional behaviour change (Archive reachable with
+zero Done Tasks): `src/App.test.tsx` rows 5/6 and the "storage refusing reads" test,
+`src/App.archive.test.tsx` rows 6/8/10. `sync.test.ts` and `useSession.test.tsx`
+untouched, as required.
+
+Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
+
+Note: `node_modules` was missing `@types/node` at the start of this session (present
+in `package.json`, absent on disk) -- ran `npm install` to restore it before the gate
+would run at all. Unrelated to this ticket's code.
