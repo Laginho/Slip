@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** ready-for-agent
-**Stage:** to-review
+**Stage:** to-implement
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -24,8 +24,9 @@ validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/compone
 
 - [x] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
       field is ignored, not half-used
-- [x] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
-      no element added to the main chrome
+- [ ] ❌ Sync row present at the bottom of the Archive; expands in place; no route, no modal,
+      no element added to the main chrome — *the row is added but a second one is left visible
+      in the main chrome; see Review 2026-09-15, finding 1*
 - [x] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
 - [x] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
       not stored, one-line reason shown
@@ -56,3 +57,53 @@ Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
 Note: `node_modules` was missing `@types/node` at the start of this session (present
 in `package.json`, absent on disk) -- ran `npm install` to restore it before the gate
 would run at all. Unrelated to this ticket's code.
+
+---
+
+## Review 2026-09-15 (stage 3) — reopened
+
+**The handoff was broken before anything could be reviewed.** Stage 2 committed
+`Archive.test.tsx` red (5829c4c) but never committed the `src/components/Archive.tsx`
+that makes it green -- slice 2 sat uncommitted in the working tree. `4c1c8d5` recorded
+"Gate green: npm test (338 passed)" measured against that dirty tree; the branch as
+committed was red. Stage 3 committed the code as `b3e5790` so there was something to
+review, and reverted an unrelated `package-lock.json` reordering picked up by the
+`npm install` above. Gate on the clean tree: 338 passed, `npx tsc -b` clean, `npm run build` ok.
+
+Two corrections to the Comments above: `sync.test.ts` was **not** untouched (+100 lines
+of new `config`/`saveConfig`/`sync` tests -- no pre-existing assertion was weakened, so
+the substance holds); `useSession.test.tsx` genuinely was.
+
+### What is left
+
+1. **Criterion 2 ❌ — the Sync row leaks into the main chrome.** `ARCHIVE_HIDDEN_OFFSET`
+   is `16 + ARCHIVE_ROW_HEIGHT` = 60 (`src/App.tsx:18`), sized for one row. With at least
+   one Done Task the collapsed Archive now renders two 44px `LINK_ROW`s -- "ver concluídas"
+   plus `<SyncRow/>` -- so scrolling 60px hides only the first, leaving the full 44px
+   "sincronizar" row parked above the Open list and shifting that list down. The zero-Done
+   case is fine (44 + 16 = 60). Needs a test: the updated tests assert `textContent` only,
+   never geometry, which is why this shipped green.
+
+2. **Small fix, no new test — inputs will zoom on iOS.** `FIELD` in `Archive.tsx` sets
+   `fontSize: 14` on the two text inputs. DESIGN.md:124-125 pins the capture textarea at
+   18px "at or above the 16px iOS needs to leave a focused field unzoomed", and allows 14px
+   only for the two-digit day field. These are fields for a pasted URL and key.
+
+### Decision needed (stage 1) — not folded in, by rule
+
+`storedConfig()` (`src/sync.ts:29`) believes whatever `sync/v1` holds: no `https:` check,
+no `isPrivileged`. Criterion 4 covers the write side only, and the write side is sound
+(the `service_role`/`sb_secret_` and base64url-payload checks mirror `guard_key` in
+`scripts/setup-publish.sh` correctly). But the repo treats storage as hostile everywhere
+else -- `store.ts` `toTask` on "a hand-edited localStorage blob", `merge` on `remote` being
+"validated rather than believed" -- so a hand-edited or injected pair reaches `fetch()`
+unchecked. Sharing one validator between save and read is a **new requirement**: it needs
+its own criterion and its own test, which is stage 1's call to fold in here or to split
+into its own ticket.
+
+Smaller notes, stage 2's judgement, not blocking: `url.trim()`/`key.trim()` live in
+`SyncRow`'s onClick rather than in `saveConfig`; `https://x.supabase.co/` (a likely paste)
+passes validation and then builds `...co//rest/v1/tasks`, a silent no-sync;
+`localStorage.setItem` in `saveConfig` is unguarded where `useSession.ts:133-148` is
+explicit that every write runs inside a try/catch; the base64url (`-`/`_`) branch of
+`isPrivileged` is never exercised -- both JWT tests use `btoa`.
