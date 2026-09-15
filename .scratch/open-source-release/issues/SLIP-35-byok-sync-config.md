@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** ready-for-agent
-**Stage:** to-review
+**Stage:** to-implement
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -24,8 +24,9 @@ validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/compone
 
 - [x] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
       field is ignored, not half-used
-- [x] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
-      no element added to the main chrome
+- [ ] ❌ Sync row present at the bottom of the Archive; expands in place; no route, no modal,
+      no element added to the main chrome — *the row still leaks 12px into the chrome; see
+      Review 2026-09-15 (stage 3, second pass)*
 - [x] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
 - [x] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
       not stored, one-line reason shown
@@ -130,3 +131,76 @@ The "Decision needed" item above (sharing a validator between `saveConfig` and
 `storedConfig`) is untouched -- stage 1's call, not folded in.
 
 Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
+
+---
+
+## Review 2026-09-15 (stage 3, second pass) — reopened
+
+Gate verified independently on the clean tree at `8585775`: `npm test` 338 passed
+(14 files), `npx tsc -b` clean, `npm run build` ok. Test/code commit separation holds
+across all nine source commits -- `7c588f7` touches only `App.archive.test.tsx` and
+`App.capture.test.tsx`, `9b3882e` only `App.tsx` and `Archive.tsx`. Red-green proof
+re-run by checking out `7c588f7`: 9 failed / 72 passed, every failure `expected 104,
+received 60`. Criteria 1 and 3-7 pass; nothing in the diff is scope creep.
+
+### What is left
+
+1. **Criterion 2 ❌ — the same leak, now 12px wide.** `archiveHiddenOffset` counts rows
+   but not the gaps between them. `<main>` is `display:flex; flexDirection:column;
+   gap:12` with `padding: "16px 16px 6px"` (`src/App.tsx:146-151`), and the collapsed
+   two-row Archive returns a fragment, so "ver concluídas" and `<SyncRow/>` are both
+   *direct* flex children of `<main>` with a 12px gap between them. Real height above the
+   Open list is `16 + 44 + 12 + 44 = 116`; the function returns `16 + 2*44 = 104`.
+   Scrolling 104 leaves the bottom 12px of the "sincronizar" row parked above the Open
+   list and pushes that list 12px below where it sat before SLIP-35. The zero-Done case
+   is still right (60) only because its single gap falls *below* the one row.
+   DESIGN.md:148 is the standard being missed: "12px between phone Cards and main
+   sections". The general form is `16 + rows*44 + (rows-1)*12`.
+
+   **This needs a test, which is why it is a reopen and not a stage-3 fix.**
+   `TWO_ROW_HIDDEN = 16 + 2 * ARCHIVE_ROW_HEIGHT` (`src/App.archive.test.tsx:14`) encodes
+   the same gap-less model the implementation has, and jsdom performs no layout, so no
+   assertion in the suite can currently see the gap. Whatever stage 2 writes has to pin
+   the gap as a value, not re-derive it from the row height.
+
+2. **The offset also assumes every row is 44px, and `SyncRow` expanded is not.** Expand
+   the Sync form while the Archive is collapsed and `<SyncRow/>` renders `FORM` (two
+   inputs + a Save button), far taller than `ARCHIVE_ROW_HEIGHT`. Worse, `hiddenOffset` is
+   now in the scroll effect's dependency list (`src/App.tsx:47`), so completing or undoing
+   a task while that form is open rescrolls and yanks the half-filled form out of view.
+   Stage 2's call whether to fix or to accept and comment; do not leave it unexamined.
+
+3. **`FIELD` draws a visible field box.** `src/components/Archive.tsx:56-64` sets
+   `border: "1px solid var(--hairline)"` on both inputs. DESIGN.md:163-164: "Inputs are
+   bare (no visible field box) — focus lives in the composition, not a border." The
+   shipped precedent is `CaptureBar.tsx:214-223`, where the textarea is `border: none;
+   background: transparent` inside a container that carries the background and the radius.
+   Not fixed here because choosing the affordance for two stacked paste targets is a
+   design decision, not a mechanical edit. (The `borderRadius: 8` is fine —
+   `CaptureBar.tsx:203` already uses 8 for an inner control.)
+
+4. **The two aria-labels disagree on case**: `"URL do Supabase"` vs
+   `"chave anon do Supabase"` (`Archive.tsx:101,109`). Left alone because
+   `Archive.test.tsx:29-33` queries on both strings, so changing them means touching
+   tests — stage 2's job, not stage 3's.
+
+### Fixed in this pass (small, no test change)
+
+`saveConfig`'s four refusal messages were Sentence-cased with terminal periods, against
+PRODUCT.md:70 "Voice: short, lowercase, informal Portuguese" and the shipped precedent at
+`App.tsx:214` ("não foi possível salvar suas alterações"). Now `"url inválida"`,
+`"a url precisa usar https"`, `"chave vazia"`, `"chave privilegiada (service_role /
+sb_secret_) — use a chave publishable/anon"`. The tests assert `not.toBeNull()`, never the
+literal strings, so the suite is untouched and still 338 passed.
+
+### Doc drift, not this ticket's to fix
+
+DESIGN.md:217 ("Don't add chrome … settings") and PRODUCT.md:31 ("no settings screen")
+now contradict the shipped Sync row. ADR 0003 authorises the row; the two older documents
+should be amended to match. Worth its own `docs` ticket.
+
+### Still open from the first pass
+
+The "Decision needed" item — `storedConfig()` (`src/sync.ts:29`) believing whatever
+`sync/v1` holds, with no `https:` and no `isPrivileged` check on the read side — is
+unchanged and remains stage 1's call.
