@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** ready-for-agent
-**Stage:** to-implement
+**Stage:** to-review
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -24,9 +24,8 @@ validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/compone
 
 - [x] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
       field is ignored, not half-used
-- [ ] ❌ Sync row present at the bottom of the Archive; expands in place; no route, no modal,
-      no element added to the main chrome — *the row is added but a second one is left visible
-      in the main chrome; see Review 2026-09-15, finding 1*
+- [x] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
+      no element added to the main chrome
 - [x] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
 - [x] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
       not stored, one-line reason shown
@@ -107,3 +106,27 @@ passes validation and then builds `...co//rest/v1/tasks`, a silent no-sync;
 `localStorage.setItem` in `saveConfig` is unguarded where `useSession.ts:133-148` is
 explicit that every write runs inside a try/catch; the base64url (`-`/`_`) branch of
 `isPrivileged` is never exercised -- both JWT tests use `btoa`.
+
+## Comments
+
+**Criterion 2, fixed.** `archiveHiddenOffset(hasDone)` (`src/App.tsx`) replaces the flat
+`ARCHIVE_HIDDEN_OFFSET` constant: 16 + one 44px row with zero Done Tasks (only the Sync
+row), 16 + two rows once a Done Task exists ("ver concluídas" joins it). Computed from
+the same `archive()` selector `Archive.tsx` already calls, so it tracks the actual row
+count. The scroll-to-hidden effect now depends on that offset (not just `archiveOpen`),
+so completing the first-ever task rescrolls immediately instead of leaving the new link
+row exposed.
+
+Test-first: a red commit updated every `App.archive.test.tsx`/`App.capture.test.tsx`
+assertion that had been comparing scrollTop/minHeight against the same constant the
+implementation used, to an independently computed `16 + rows*44` (rows from Done-task
+count) -- 9 failures, all expecting 104 and getting the old flat 60. Then the code
+commit made it green.
+
+Also applied finding 2 (small fix, no new test): `FIELD.fontSize` in `Archive.tsx` raised
+14 → 16, per DESIGN.md's 16px-minimum-to-avoid-iOS-zoom rule.
+
+The "Decision needed" item above (sharing a validator between `saveConfig` and
+`storedConfig`) is untouched -- stage 1's call, not folded in.
+
+Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
