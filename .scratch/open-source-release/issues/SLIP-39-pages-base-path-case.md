@@ -3,7 +3,8 @@
 **Status:** ready-for-agent
 **Stage:** to-implement
 **Type:** fix
-**Blocked by:** none
+**Blocked by:** SLIP-37 (both edit `src/publish.test.ts`, and SLIP-37 runs first. Nothing
+else couples them: flip the order if the blank public URL should be fixed sooner)
 **Review:** human
 
 - Primary files:
