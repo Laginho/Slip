@@ -19,7 +19,7 @@ English.
 Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0003; `PRODUCT.md`;
 `README.md` as it stands.
 
-**Blocked by:** SLIP-35, SLIP-36, SLIP-37 (the README describes all three as shipped).
+**Blocked by:** SLIP-35, SLIP-36, SLIP-37, SLIP-39 (the README describes the first three as shipped, and it points strangers at the public URL, which SLIP-39 makes render).
 
 - [ ] `LICENSE` present, MIT, correct name and year; `package.json` has the license field
 - [ ] README sections in the order above; every command in it runs as written
