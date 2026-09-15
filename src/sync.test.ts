@@ -211,6 +211,18 @@ describe("saveConfig — validate and store the device pair", () => {
 });
 
 describe("sync", () => {
+  it("uses a pair saved via saveConfig on the very next call, without a reload", async () => {
+    saveConfig("https://device.supabase.co", "device-key");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([]));
+
+    await sync([task({ id: "a" })]);
+
+    expect(fetchSpy.mock.calls[0][0]).toBe("https://device.supabase.co/rest/v1/tasks?select=*");
+    expect((fetchSpy.mock.calls[0][1] as RequestInit).headers).toMatchObject({
+      apikey: "device-key",
+    });
+  });
+
   it("does nothing and never touches the network when unconfigured", async () => {
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_ANON_KEY", "");
