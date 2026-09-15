@@ -1,7 +1,7 @@
 # SLIP-35: Sync reads a device-stored key, set from a Sync row in the Archive
 
 **Status:** ready-for-agent
-**Stage:** to-implement
+**Stage:** to-review
 **Type:** feat
 
 **What to build:** `config()` in `src/sync.ts` returns the pair stored under localStorage
@@ -24,9 +24,8 @@ validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/compone
 
 - [x] `config()` precedence: stored pair → env pair → null; a stored pair with one empty
       field is ignored, not half-used
-- [ ] ❌ Sync row present at the bottom of the Archive; expands in place; no route, no modal,
-      no element added to the main chrome — *the row still leaks 12px into the chrome; see
-      Review 2026-09-15 (stage 3, second pass)*
+- [x] Sync row present at the bottom of the Archive; expands in place; no route, no modal,
+      no element added to the main chrome
 - [x] Valid pair saved to `sync/v1`; next `sync()` call uses it without reload
 - [x] `http:` URL, unparseable URL, empty key, `service_role` JWT, `sb_secret_` key: refused,
       not stored, one-line reason shown
@@ -204,3 +203,25 @@ should be amended to match. Worth its own `docs` ticket.
 The "Decision needed" item — `storedConfig()` (`src/sync.ts:29`) believing whatever
 `sync/v1` holds, with no `https:` and no `isPrivileged` check on the read side — is
 unchanged and remains stage 1's call.
+
+## Comments
+
+**Criterion 2, fixed for the gap.** `archiveHiddenOffset(hasDone)` now adds
+`(rows - 1) * MAIN_GAP` on top of the row heights, where `MAIN_GAP = 12` is the
+same constant `main`'s own `gap: 12` style reads (`src/App.tsx`) — one source of
+truth for both, so they can't drift apart again. Two rows: `16 + 2*44 + 12 = 116`.
+One row (zero Done Tasks): unchanged at `60`, since a single row has no gap above it.
+
+Test-first: a red commit pinned the 12px gap as a literal in `TWO_ROW_HIDDEN`
+(`src/App.archive.test.tsx`, plus the matching literal in `src/App.capture.test.tsx`)
+— independent of `ARCHIVE_ROW_HEIGHT` so a re-broken formula can't accidentally
+satisfy it — 9 failures, all `expected 116, received 104`. Then the code commit
+made it green.
+
+Items 2-4 from the second review pass (SyncRow's expanded height vs. the offset,
+the visible field border, the aria-label casing) and the "Decision needed" item are
+untouched, per this pass's scope — items 2 and 4 are stage-2 judgement calls not
+exercised here, item 3 is a design decision, and the read-side validator is stage 1's
+call, all as the review already noted.
+
+Gate green: `npm test` (338 passed), `npx tsc -b`, `npm run build`.
