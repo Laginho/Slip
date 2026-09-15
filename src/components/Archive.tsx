@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import type { Task } from "../store";
 import { archive } from "../store";
+import { saveConfig } from "../sync";
 
 /**
  * The Archive: every Done Task, kept forever, shown on request at the bottom of the
@@ -52,20 +53,98 @@ const LINK: CSSProperties = {
   cursor: "pointer",
 };
 
+const FIELD: CSSProperties = {
+  border: "1px solid var(--hairline)",
+  borderRadius: 8,
+  padding: "8px 10px",
+  fontSize: 14,
+  fontFamily: "inherit",
+  color: "inherit",
+  background: "transparent",
+};
+
+const FORM: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+  padding: "8px 0",
+};
+
+/**
+ * SLIP-35: BYOK. Collapsed, in the style of the "ver concluídas" link, until
+ * clicked; then two inputs and a Save button, in place -- no route, no modal.
+ * saveConfig() owns the storage key, the URL/privileged-key validation and the
+ * both-fields-empty removal; this row only reports what it returned.
+ */
+function SyncRow() {
+  const [expanded, setExpanded] = useState(false);
+  const [url, setUrl] = useState("");
+  const [key, setKey] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  if (!expanded) {
+    return (
+      <p style={LINK_ROW}>
+        <button type="button" style={LINK} onClick={() => setExpanded(true)}>
+          sincronizar
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <div style={FORM}>
+      <input
+        type="text"
+        value={url}
+        onChange={(event) => setUrl(event.target.value)}
+        aria-label="URL do Supabase"
+        placeholder="https://<projeto>.supabase.co"
+        style={FIELD}
+      />
+      <input
+        type="text"
+        value={key}
+        onChange={(event) => setKey(event.target.value)}
+        aria-label="chave anon do Supabase"
+        placeholder="chave publishable/anon"
+        style={FIELD}
+      />
+      <p style={{ margin: 0, display: "flex", justifyContent: "center" }}>
+        <button
+          type="button"
+          style={LINK}
+          onClick={() => setError(saveConfig(url.trim(), key.trim()))}
+        >
+          salvar
+        </button>
+      </p>
+      {error !== null && (
+        <p role="alert" style={{ color: "var(--text-quiet)", fontSize: 13, margin: 0, textAlign: "center" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function Archive({ tasks, now, open, onToggle }: Props) {
   const [allTime, setAllTime] = useState(false);
 
   const done = archive(tasks);
-  // Nothing has ever been finished: even the link would be noise.
-  if (done.length === 0) return null;
+  // Nothing has ever been finished: the Sync row is the only reason to be here.
+  if (done.length === 0) return <SyncRow />;
 
   if (!open) {
     return (
-      <p style={LINK_ROW}>
-        <button type="button" style={LINK} onClick={onToggle}>
-          ver concluídas
-        </button>
-      </p>
+      <>
+        <p style={LINK_ROW}>
+          <button type="button" style={LINK} onClick={onToggle}>
+            ver concluídas
+          </button>
+        </p>
+        <SyncRow />
+      </>
     );
   }
 
@@ -112,6 +191,8 @@ export function Archive({ tasks, now, open, onToggle }: Props) {
           </button>
         </p>
       )}
+
+      <SyncRow />
     </>
   );
 }
