@@ -1,7 +1,7 @@
 # SLIP-39: The deployed Pages app is blank — base path case does not match the repo
 
 **Status:** ready-for-agent
-**Stage:** to-implement
+**Stage:** blocked
 **Type:** fix
 **Blocked by:** SLIP-37 (both edit `src/publish.test.ts`, and SLIP-37 runs first. Nothing
 else couples them: flip the order if the blank public URL should be fixed sooner)
@@ -78,3 +78,5 @@ against a rename that happens approximately never.
   literal, and criterion 1 cannot pass without it since `dist/sw.js` bakes that path in
   directly rather than deriving it from `base`. Primary files now name it. Stage back to
   `to-implement`; resume attempt 2.
+
+- 2026-09-16 Attempt 1 stopped to ask: Stopped, per the loop's rules — found a second gap the ticket doesn't cover. /  / The test-only commit for `src/publish.test.ts` landed clean (red for the right reason). But fixing `vite.config.ts`'s four `/slip/` literals breaks a guard test at `src/identity.test.ts:27-33` — added by the earlier rename-to-Slip ticket (SLIP-31) to stop *that* ticket from touching path casing while it changed branding. It's not in SLIP-39's Primary files, so I reverted the `vite.config.ts` edit, left everything else untouched, and recorded the gap on the ticket (blocked, on branch `slip-39`). /  / Two ways to proceed: / 1. Reopen at stage 1 to add `src/identity.test.ts` (lines 27-33) to Primary files. / 2. Confirm now that I should update that guard's four regexes to `/Slip/` in place, and I'll continue. /  / Which do you want? /
