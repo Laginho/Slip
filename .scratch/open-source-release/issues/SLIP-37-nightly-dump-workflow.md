@@ -28,7 +28,7 @@ the same time; that ticket lists this one as its blocker, which is enough.
 - [x] Workflow present with schedule + manual trigger
 - [x] Empty secret → job succeeds and prints the skip line (verify via `workflow_dispatch`
       on the PR branch, or by running the step's shell locally with the var unset)
-      — ⚠️ met by reading, never executed; see the Resolution block
+      — executed 2026-09-16 via the local-shell half; see the Resolution block
 - [x] With the secret set: artifact named `tasks-YYYY-MM-DD.sql`, 14-day retention
       — failed at review, fixed in `771b3c7`
 - [x] Secret appears only in the dump step's `env:`, never at job level
@@ -69,10 +69,10 @@ the same time; that ticket lists this one as its blocker, which is enough.
 
 #### Resolution (2026-09-15)
 
-Verdict: Needs your call: nothing in this ticket has ever been executed — criterion 2's
-own escape hatch (a `workflow_dispatch` run, or running the step's shell locally with the
-var unset) was not exercised, so the only evidence for the two behavioural criteria is a
-reading of the YAML, which is exactly the evidence SLIP-39 proved worthless.
+Verdict: Needs your call, answered by the human on 2026-09-16 — see "Execution" and
+"Accepted debt" below. The review's objection stood: nothing had been executed, so the only
+evidence for the two behavioural criteria was a reading of the YAML, which is exactly the
+evidence SLIP-39 proved worthless. Criterion 2 has since been executed.
 
 Merged into the session branch `sweatshop/2026-09-15-1701` (not `main`): see "Loop base"
 below.
@@ -112,8 +112,50 @@ else is recorded here, unfixed.
 4. No `permissions:` block, so the job inherits the repo default while holding a database
    secret; `pages.yml` declares least privilege. Not added — no criterion asks for it, and
    stage 3 does not widen a ticket. A `contents: read` line is the whole fix if you want it.
+   — **Fixed on the human's call, 2026-09-16.** Top-level `permissions: contents: read`,
+   mirroring `pages.yml`'s placement. No test pin: `publish.test.ts` does not pin
+   `pages.yml`'s permissions either, so pinning here would invent a convention.
 5. `sudo apt-get update && install` has no retry, so a transient mirror failure fails the
    nightly outright. Same reasoning: unasked-for.
+
+#### Execution (2026-09-16)
+
+Criterion 2 was run, by the second of the two routes the criterion itself offers:
+
+    $ SUPABASE_DB_URL="" bash -c '<the dump step's shell, verbatim>'
+    no SUPABASE_DB_URL secret; skipping
+    exit=0
+
+`gh secret list` is empty — SLIP-36 removed the two Pages secrets and the user deleted them
+from the repository — so the skip path is the one this workflow actually takes today, not a
+hypothetical. The upload step is skipped with it: `steps.dump.outputs.file` is only set on
+the dump path, and `if: steps.dump.outputs.file != ''` gates the upload on it.
+
+**The `workflow_dispatch` half of criterion 2 is unachievable as written.** Dispatching it
+on the PR branch returns:
+
+    HTTP 404: workflow dump.yml not found on the default branch
+
+GitHub only registers `workflow_dispatch` for workflows already present on the default
+branch; selecting a different ref comes after that. A CI ticket cannot ask for a dispatch
+run as pre-merge evidence — the earliest it can be exercised is after the merge. Worth
+knowing when writing the next one.
+
+With the secret set, nothing is executed and nothing can be: there is no secret to set, and
+supplying one would point a nightly `pg_dump` at a live database from a review. Criterion 3
+rests on the tightened test and on reading.
+
+#### Accepted debt (2026-09-16)
+
+Findings 3 and 5 are accepted as debt on the human's call, with reasons, and get no ticket:
+
+- **3, `upload-artifact@v4`.** It works. v7's gain over the current code is that
+  `archive: false` expresses criterion 3 natively, replacing an indirection that is already
+  written and pinned by a test. It rides along with the next actions bump of this repo,
+  which touches `pages.yml` anyway.
+- **5, no `apt-get` retry.** The `ubuntu-latest` image ships `pg_dump`, and the
+  `command -v pg_dump` guard means the install branch does not normally run at all. A retry
+  around a path that does not execute is scaffolding.
 
 **Files**
 
