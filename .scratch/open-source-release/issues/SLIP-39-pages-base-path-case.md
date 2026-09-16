@@ -8,7 +8,8 @@ else couples them: flip the order if the blank public URL should be fixed sooner
 **Review:** human
 
 - Primary files:
-  - `vite.config.ts` (`base`, and the manifest's `start_url` / `scope` — nothing else)
+  - `vite.config.ts` (`base`, the manifest's `start_url` / `scope`, and workbox's
+    `navigateFallback` — all four `/slip/` literals in the file, nothing else)
   - `src/publish.test.ts` (the two cases at lines 63-76 only)
 
 #### What to build
@@ -70,3 +71,10 @@ against a rename that happens approximately never.
   `/slip/`. Rename both cases so they read `/Slip/`.
 
 ## Comments
+
+- 2026-09-15 Attempt 1 stopped to ask: Found a gap before writing any code: the ticket restricts `vite.config.ts` edits to `base` and the manifest's `start_url`/`scope` ("nothing else"), but I built the current config and confirmed `dist/sw.js` also bakes in a literal `/slip/` via `workbox.navigateFallback: "/slip/index.html"` — that's not derived from `base`, it's a separate hardcoded path. Criterion 1 ("no reference to `/slip/` survives anywhere in `dist/`") can't pass without touching that line too. /  / - `registerSW.js`'s `/slip/` (service worker path + scope) *is* auto-derived from `base` — no ticket conflict there. / - `sw.js`'s `createHandlerBoundToURL("/slip/index.html")` comes straight from the `navigateFallback` literal, which the ticket's Primary-files scope excludes. /  / This is a seam the ticket doesn't name, so per the loop's rules I'm stopping rather than quietly going out of scope. Options: / 1. Reopen at stage 1 to add `workbox.navigateFallback` to SLIP-39's Primary files (one-line fix to the ticket), or / 2. You confirm now that I should include that line since it's in the same file already in scope, and I'll proceed. /  / Which do you want? /
+
+- 2026-09-15 Answered: option 2. Include `workbox.navigateFallback` — same file, same
+  literal, and criterion 1 cannot pass without it since `dist/sw.js` bakes that path in
+  directly rather than deriving it from `base`. Primary files now name it. Stage back to
+  `to-implement`; resume attempt 2.
