@@ -24,12 +24,12 @@ describe("identity — rename to Slip + portrait lock", () => {
   });
 
   // Row 3 — GREEN guard: base/start_url/scope/navigateFallback unchanged
-  it("vite config base, start_url, scope, navigateFallback still /slip/ forms", () => {
+  it("vite config base, start_url, scope, navigateFallback still /Slip/ forms", () => {
     const cfg = read("vite.config.ts");
-    expect(cfg).toMatch(/base\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/start_url\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/scope\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/navigateFallback\s*:\s*["']\/slip\/index\.html["']/);
+    expect(cfg).toMatch(/base\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/start_url\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/scope\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/navigateFallback\s*:\s*["']\/Slip\/index\.html["']/);
   });
 
   // Row 4 — RED: title currently "Tasks"

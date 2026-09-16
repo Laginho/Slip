@@ -1,7 +1,7 @@
 # SLIP-39: The deployed Pages app is blank — base path case does not match the repo
 
 **Status:** ready-for-agent
-**Stage:** to-implement
+**Stage:** implementing
 **Type:** fix
 **Blocked by:** SLIP-37 (both edit `src/publish.test.ts`, and SLIP-37 runs first. Nothing
 else couples them: flip the order if the blank public URL should be fixed sooner)
