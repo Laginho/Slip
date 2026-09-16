@@ -1,7 +1,7 @@
 # SLIP-39: The deployed Pages app is blank — base path case does not match the repo
 
 **Status:** ready-for-agent
-**Stage:** blocked
+**Stage:** to-implement
 **Type:** fix
 **Blocked by:** SLIP-37 (both edit `src/publish.test.ts`, and SLIP-37 runs first. Nothing
 else couples them: flip the order if the blank public URL should be fixed sooner)
@@ -11,6 +11,8 @@ else couples them: flip the order if the blank public URL should be fixed sooner
   - `vite.config.ts` (`base`, the manifest's `start_url` / `scope`, and workbox's
     `navigateFallback` — all four `/slip/` literals in the file, nothing else)
   - `src/publish.test.ts` (the two cases at lines 63-76 only)
+  - `src/identity.test.ts` (Row 3, lines 26-34 only — the guard SLIP-31 left behind; its
+    four regexes and the test name move from `/slip/` to `/Slip/`, nothing else in the file)
 
 #### What to build
 
@@ -69,6 +71,13 @@ against a rename that happens approximately never.
   output already produced in `beforeAll`. Red because `vite.config.ts` still emits
   `/slip/`: `toContain("/Slip/")` fails on the HTML, and `start_url` / `scope` come back
   `/slip/`. Rename both cases so they read `/Slip/`.
+- `src/identity.test.ts` Row 3, the same commit. Today it pins the four `vite.config.ts`
+  literals *to* `/slip/`, so it is the exact inverse of criterion 1 — leave it and the
+  ticket is unbuildable. Flip its four regexes and the test name to `/Slip/`; it stays a
+  guard, now guarding the right casing.
+
+A repo-wide sweep confirms these three files hold every `/slip/` pin: no workflow, no doc,
+no `package.json`, no hardcoded `github.io` URL. Nothing else can surprise attempt 3.
 
 ## Comments
 
@@ -80,3 +89,9 @@ against a rename that happens approximately never.
   `to-implement`; resume attempt 2.
 
 - 2026-09-16 Attempt 1 stopped to ask: Stopped, per the loop's rules — found a second gap the ticket doesn't cover. /  / The test-only commit for `src/publish.test.ts` landed clean (red for the right reason). But fixing `vite.config.ts`'s four `/slip/` literals breaks a guard test at `src/identity.test.ts:27-33` — added by the earlier rename-to-Slip ticket (SLIP-31) to stop *that* ticket from touching path casing while it changed branding. It's not in SLIP-39's Primary files, so I reverted the `vite.config.ts` edit, left everything else untouched, and recorded the gap on the ticket (blocked, on branch `slip-39`). /  / Two ways to proceed: / 1. Reopen at stage 1 to add `src/identity.test.ts` (lines 27-33) to Primary files. / 2. Confirm now that I should update that guard's four regexes to `/Slip/` in place, and I'll continue. /  / Which do you want? /
+
+- 2026-09-16 Answered: option 1. `src/identity.test.ts` Row 3 is now in Primary files —
+  it is a stale guard from SLIP-31, pinning the very casing this ticket exists to change,
+  so updating it *is* the fix, not scope creep. I also swept the repo: `vite.config.ts`,
+  `src/publish.test.ts` and `src/identity.test.ts` are the only files holding a `/slip/`
+  pin, and all three are now in scope. Stage back to `to-implement`; resume attempt 2.
