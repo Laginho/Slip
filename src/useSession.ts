@@ -48,6 +48,19 @@ export function useSession() {
   const latest = useRef(tasks);
   const syncTimer = useRef<number | undefined>(undefined);
 
+  /**
+   * A round trip in flight, and whether another trigger arrived while it was. Requests
+   * complete in whatever order the network hands them back, and each POST unconditionally
+   * upserts the merge it computed -- so an older request landing after a newer one
+   * overwrites the newer state with the older, undoing a completion, edit or deletion the
+   * newer request already carried (SLIP-44). Serializing to one flight at a time removes
+   * the overlap the bug needs; coalescing every trigger that arrives mid-flight into a
+   * single follow-up, run from the list as it stands once the flight settles, keeps a
+   * burst of triggers from opening a burst of requests.
+   */
+  const inFlight = useRef(false);
+  const queued = useRef(false);
+
   /** The list has changed and storage already knows. Show it. */
   const adopt = useCallback((next: Task[]) => {
     latest.current = next;
@@ -119,9 +132,19 @@ export function useSession() {
    * anything -- unconfigured, offline, a bad response -- and there is nothing to settle.
    */
   const roundTrip = useCallback(() => {
+    if (inFlight.current) {
+      queued.current = true;
+      return;
+    }
+    inFlight.current = true;
     const snapshot = latest.current;
     void sync(snapshot).then((result) => {
+      inFlight.current = false;
       if (result !== snapshot) settle(result);
+      if (queued.current) {
+        queued.current = false;
+        roundTrip();
+      }
     });
   }, [settle]);
 
