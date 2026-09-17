@@ -1,7 +1,7 @@
 # SLIP-41: DESIGN.md and PRODUCT.md still say the app has no settings
 
-**Status:** ready-for-agent
-**Stage:** to-implement
+**Status:** claimed
+**Stage:** to-review
 **Type:** docs
 **Blocked by:** none
 **Review:** agent
