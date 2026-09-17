@@ -1,6 +1,6 @@
 # SLIP-44: Remediate the 2026-09-17 audit at `68b8d6d`
 
-**Status:** ready-for-agent
+**Status:** claimed
 **Type:** fix
 **Blocked by:** none
 
