@@ -1,0 +1,42 @@
+# Pre-release polish — docs and audits
+
+Status: complete
+
+Not a grilled feature spec. This directory collects what stood between the open-source
+release landing and the repo being publishable, gathered on 2026-09-17 by reading closed
+tickets rather than by designing anything new.
+
+## Why it exists
+
+Every ticket in the repo was `complete` and the tracker therefore showed zero open work.
+Three real items existed anyway, as prose inside `SLIP-35-byok-sync-config.md` — a ticket
+marked `complete`. Each review pass recorded its finding, correctly declined to fold it in
+(`docs/agents/orchestration.md`: only stage 1 moves a comment into a body), and closed.
+Nobody ran the stage-1 pass that turns those notes into tickets.
+
+`orchestration.md` predicted exactly this: "An unfolded comment is a note, not a
+requirement: prose in a body that no file and no criterion backs is invisible to stage 2,
+which will ship green without it." The `storedConfig()` item was written down four separate
+times before it became SLIP-40.
+
+## Tickets
+
+| Ticket | Type | Source |
+| --- | --- | --- |
+| SLIP-40 `storedConfig()` trusts whatever `sync/v1` holds | fix | SLIP-35 lines 91, 129, 203, 222 |
+| SLIP-41 DESIGN.md and PRODUCT.md still say there are no settings | docs | SLIP-35 lines 195, 294 |
+| SLIP-42 the Sync row's inputs draw a field box DESIGN.md forbids | fix | SLIP-35 line 288 |
+| SLIP-43 no audit has seen the release surface | chore | nothing — inferred from file dates |
+
+SLIP-42 is `needs-info`: it has been left as shipped by three review passes because the
+fix requires a design decision, and this pass does not get to guess either.
+
+## Out of scope
+
+Anything the audit in SLIP-43 turns up. Those become their own tickets, per its criterion 4.
+
+## Worth carrying forward
+
+A finding recorded under `## Comments` on a ticket that then closes leaves no trace in the
+tracker's definition of open work. Either the closing pass opens the follow-up ticket, or
+the finding is invisible the moment the ticket goes `complete`.
