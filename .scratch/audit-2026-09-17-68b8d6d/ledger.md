@@ -1,0 +1,5 @@
+# Ledger — audit-2026-09-17-68b8d6d
+
+| Date | Ticket | Commit |
+| --- | --- | --- |
+| 2026-09-17 | SLIP-44 | `39866b3` (PR #43 from `fix/audit-68b8d6d-remediation`, red `731a77d` + green `39866b3` + the audit report `b89e27d`) — the single finding closed: `roundTrip()` serializes to one flight at a time behind a ref guard, and every trigger arriving mid-flight coalesces into exactly one follow-up run from the list as it stands at settlement, so an older POST can no longer land after a newer one and undo a completion, edit or deletion on the remote. Gates: 15 files / 354 tests, `npx tsc -b`, `npm run lint`, `npm run build`. Red reproduced independently by the reviewer at `731a77d` (5 failed / 26 passed, matrix (a)–(d); (e) a pre-fix-passing control). No browser pass — sync logic, no rendered surface. `sync()` verified total, so the un-`catch`ed `.then` cannot wedge the guard. PR CI left to the human by design. Sonnet 5 implemented; Opus 5 reviewed — nothing corrected, verdict Approve. |

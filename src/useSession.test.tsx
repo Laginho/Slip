@@ -11,7 +11,7 @@ vi.mock("./sync", async (importOriginal) => {
   };
 });
 
-import { sync } from "./sync";
+import { merge, sync } from "./sync";
 import { useSession } from "./useSession";
 
 function freshSyncMock(): ReturnType<typeof vi.fn> {
@@ -616,5 +616,194 @@ describe("Sync on reconnect and on return to the foreground", () => {
     expect(syncFn).not.toHaveBeenCalled();
     expect(consoleSpy).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+});
+
+/**
+ * Models the round trip's two legs separately: merge is computed against `remote` the
+ * moment sync() is called (the real GET), and the result is only written back -- and the
+ * held promise resolved -- when the test calls `land()` (the POST completing). That lets
+ * a test hold requests open and choose the order they land in, which is what the audited
+ * defect (2026-09-17 at 68b8d6d, finding 1) depends on: a later request's write landing
+ * before an earlier one's.
+ */
+function stubBackend(seed: Task[]) {
+  let remote = seed;
+  const flights = new Map<number, { merged: Task[]; resolve: (tasks: Task[]) => void }>();
+  let nextId = 0;
+
+  const stubSync = (local: Task[]): Promise<Task[]> => {
+    const merged = merge(local, remote);
+    const id = nextId++;
+    return new Promise<Task[]>((resolve) => {
+      flights.set(id, { merged, resolve });
+    });
+  };
+
+  const land = (id: number): void => {
+    const flight = flights.get(id);
+    if (!flight) throw new Error(`no flight #${id} to land`);
+    flights.delete(id);
+    remote = flight.merged;
+    flight.resolve(flight.merged);
+  };
+
+  /**
+   * Lands whichever pending flight was created most recently, repeatedly, until none
+   * remain -- awaiting between lands so a follow-up a fix creates only shows up once its
+   * predecessor has actually landed, instead of before anyone released it.
+   */
+  const landNewestUntilEmpty = async (): Promise<void> => {
+    while (flights.size > 0) {
+      const newest = Math.max(...flights.keys());
+      await act(async () => {
+        land(newest);
+      });
+    }
+  };
+
+  return { sync: stubSync, landNewestUntilEmpty, remote: () => remote };
+}
+
+describe("Serialized round trips (SLIP-44, audit 2026-09-17 at 68b8d6d, finding 1)", () => {
+  it.each([
+    [
+      "discard",
+      (s: ReturnType<typeof useSession>, t: Task) => s.discard(t),
+      (remote: Task) => remote.deleted,
+    ],
+    [
+      "complete",
+      (s: ReturnType<typeof useSession>, t: Task) => s.complete(t),
+      (remote: Task) => remote.done,
+    ],
+    [
+      "edit",
+      (s: ReturnType<typeof useSession>, t: Task) => s.edit(t, "edited"),
+      (remote: Task) => remote.text === "edited",
+    ],
+  ])(
+    "a held mount round trip landing after a debounced %s does not undo it on the remote",
+    async (_name, perform, landedCorrectly) => {
+      vi.useFakeTimers();
+      seedStorage([task({ id: "t", updatedAt: 1 })]);
+      const backend = stubBackend([task({ id: "t", updatedAt: 1 })]);
+      freshSyncMock().mockImplementation(backend.sync);
+
+      await render(<Probe />); // mount round trip: reads the Open remote, held
+
+      await act(async () => {
+        perform(latestResult!, latestResult!.tasks[0]);
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(1500); // the debounced follow-up attempts to fire
+      });
+
+      await backend.landNewestUntilEmpty();
+
+      expect(landedCorrectly(backend.remote().find((r) => r.id === "t")!)).toBe(true);
+    },
+  );
+
+  it("a mutation during a flight causes exactly one follow-up, carrying it", async () => {
+    let resolveMount!: (tasks: Task[]) => void;
+    const syncFn = freshSyncMock();
+    syncFn.mockImplementationOnce(
+      () =>
+        new Promise<Task[]>((r) => {
+          resolveMount = r;
+        }),
+    );
+    syncFn.mockImplementation(async (local: Task[]) => local);
+
+    await render(<Probe />);
+    expect(syncFn).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      latestResult!.capture("during flight", "work", null);
+    });
+    await act(async () => {
+      // "online" calls syncNow(), which would start a second request if unserialized.
+      await dispatch(new Event("online"), window);
+    });
+    expect(syncFn).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveMount([]);
+    });
+
+    expect(syncFn).toHaveBeenCalledTimes(2);
+    const followUp = syncFn.mock.calls[1][0] as Task[];
+    expect(followUp.map((t) => t.text)).toEqual(["during flight"]);
+  });
+
+  it("three triggers during one flight still coalesce into a single follow-up", async () => {
+    vi.useFakeTimers();
+    let resolveMount!: (tasks: Task[]) => void;
+    const syncFn = freshSyncMock();
+    syncFn.mockImplementationOnce(
+      () =>
+        new Promise<Task[]>((r) => {
+          resolveMount = r;
+        }),
+    );
+    syncFn.mockImplementation(async (local: Task[]) => local);
+
+    await render(<Probe />);
+
+    await act(async () => {
+      latestResult!.capture("one", "work", null);
+    });
+    await act(async () => {
+      await dispatch(new Event("online"), window); // trigger 1
+    });
+    await act(async () => {
+      latestResult!.capture("two", "work", null);
+    });
+    await act(async () => {
+      await dispatch(new Event("online"), window); // trigger 2
+    });
+    await act(async () => {
+      latestResult!.capture("three", "work", null);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(1500); // trigger 3, via the debounce this arms
+    });
+
+    expect(syncFn).toHaveBeenCalledTimes(1); // still only the held mount request
+
+    await act(async () => {
+      resolveMount([]);
+    });
+
+    expect(syncFn).toHaveBeenCalledTimes(2); // exactly one follow-up
+    const followUp = syncFn.mock.calls[1][0] as Task[];
+    expect(followUp.map((t) => t.text).sort()).toEqual(["one", "three", "two"]);
+  });
+
+  it("a flight that resolves with the snapshot unchanged still releases the guard", async () => {
+    let resolveMount!: () => void;
+    const syncFn = freshSyncMock();
+    syncFn.mockImplementationOnce((local: Task[]) => {
+      return new Promise<Task[]>((resolve) => {
+        resolveMount = () => resolve(local); // "offline": resolves with the same snapshot
+      });
+    });
+    syncFn.mockImplementation(async (local: Task[]) => local);
+
+    await render(<Probe />);
+    expect(syncFn).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveMount();
+    });
+    // No trigger arrived during the flight, so no automatic follow-up.
+    expect(syncFn).toHaveBeenCalledTimes(1);
+
+    // A later, ordinary trigger must still be able to fly -- the guard must not be stuck.
+    await act(async () => {
+      await dispatch(new Event("online"), window);
+    });
+    expect(syncFn).toHaveBeenCalledTimes(2);
   });
 });
