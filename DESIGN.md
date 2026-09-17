@@ -214,5 +214,8 @@ border.
 ### Don't:
 - **Don't** introduce shadows, gradients, or new hues; the chrome follows the system colour scheme; the nine Card swatches never vary.
 - **Don't** let any notification take part in the document flow.
-- **Don't** add chrome (nav bars, tabs, settings) — sections only.
+- **Don't** add chrome (nav bars, tabs, a settings screen) — sections only. One exception,
+  authorised by ADR 0004 and not to be widened: the Archive's Sync row, where a person
+  pastes their own Supabase pair. It is a row inside a section, collapsed to a single link
+  until clicked, and a person who never syncs never opens it.
 - **Don't** touch the Overdue red or the amber's pinned lightness.
