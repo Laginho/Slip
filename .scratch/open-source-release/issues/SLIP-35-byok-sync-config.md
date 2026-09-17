@@ -16,7 +16,7 @@ Ctrl+H is removed so an empty Archive shows only the Sync row. Nothing in the Op
 Capture pill or the Cards changes.
 
 Context: `.scratch/open-source-release/spec.md` (Implementation Decisions → configuration,
-validation, field, precedence); ADR 0003; `src/sync.ts` `config()`; `src/components/Archive.tsx`
+validation, field, precedence); ADR 0004; `src/sync.ts` `config()`; `src/components/Archive.tsx`
 `LINK_ROW`; `src/App.tsx` lines gated by `hasArchive`; the privileged-key rule in
 `scripts/setup-publish.sh`.
 
@@ -195,7 +195,7 @@ literal strings, so the suite is untouched and still 338 passed.
 ### Doc drift, not this ticket's to fix
 
 DESIGN.md:217 ("Don't add chrome … settings") and PRODUCT.md:31 ("no settings screen")
-now contradict the shipped Sync row. ADR 0003 authorises the row; the two older documents
+now contradict the shipped Sync row. ADR 0004 authorises the row; the two older documents
 should be amended to match. Worth its own `docs` ticket.
 
 ### Still open from the first pass
@@ -290,7 +290,7 @@ None of these is a criterion failure; each wants its own ticket.
    something that carries the ground — and choosing that ground for two inputs sitting
    directly on `--surface` is a design call, not a mechanical edit. Flagged on the PR.
 4. **DESIGN.md:217 and PRODUCT.md:31 now contradict the shipped Sync row** ("Don't add
-   chrome … settings", "no settings screen"). ADR 0003 authorises the row; the two older
+   chrome … settings", "no settings screen"). ADR 0004 authorises the row; the two older
    documents should be amended. Its own `docs` ticket.
 5. **Not findings, deliberately:** the `URL do Supabase` / `chave anon do Supabase` casing
    is right as it stands — `URL` is an initialism, not a voice violation; `url.trim()` in
