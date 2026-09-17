@@ -1,6 +1,6 @@
 # SLIP-45: Enforce the newer-stamp rule at the server boundary
 
-**Status:** ready-for-agent
+**Status:** complete
 **Type:** fix
 **Blocked by:** none
 
@@ -173,3 +173,14 @@ does not take.
   the trigger does not replicate `winner()`'s tie-break; **(2) option (a)**, declaration
   test in `src/publish.test.ts` plus a manual SQL transcript against a disposable Postgres
   in the PR description, no database in the test path. Moved to `ready-for-agent`.
+- 2026-09-17 — Closed. Implemented straight on `main` on the human's instruction, outside
+  the ticket flow (one commit, no PR). `tasks_reject_stale` BEFORE UPDATE trigger in
+  `supabase/schema.sql`, ordering only; declaration test in `src/publish.test.ts`; ADR 0001
+  consequences narrowed; README tells existing deployments to re-run the schema. Client
+  untouched (`src/sync.ts`, `src/useSession.ts`, `src/store.ts`). Behavioural proof, since
+  there is no PR description to hold it: the schema was run twice against a disposable
+  pglite Postgres (`@electric-sql/pglite`, scratch dir, not a repo dependency) as role
+  `anon` via `INSERT … ON CONFLICT (id) DO UPDATE` — insert at ts 100 landed; tombstone at
+  ts 200 landed; stale pre-delete row at ts 100 refused (tombstone stood); equal-stamp
+  write at ts 200 landed; a batch of one stale `a` plus a new `b` inserted `b` and left `a`
+  untouched; `has_table_privilege('anon','public.tasks','delete')` = false.

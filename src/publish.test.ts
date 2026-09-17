@@ -135,6 +135,22 @@ describe("publish — GitHub Pages, PWA, and sync", () => {
     expect(schema).toMatch(/length\s*\(\s*btrim\s*\(\s*id\s*\)\s*\)\s*>\s*0/);
   });
 
+  // Declaration test only: proves the file says so, not that the trigger fires (SLIP-45).
+  it("refuses a strictly older updatedAt at the server, ordering only", () => {
+    const schema = read("supabase/schema.sql");
+    const lower = schema.toLowerCase();
+    expect(lower).toMatch(/create\s+or\s+replace\s+function\s+public\.tasks_reject_stale\s*\(\s*\)\s*returns\s+trigger/);
+    expect(schema).toMatch(/if\s+new\."updatedAt"\s*<\s*old\."updatedAt"\s+then\s+return\s+null;/i);
+    expect(lower).toMatch(/drop\s+trigger\s+if\s+exists\s+tasks_reject_stale\s+on\s+public\.tasks/);
+    expect(lower).toMatch(/create\s+trigger\s+tasks_reject_stale\s+before\s+update\s+on\s+public\.tasks\s+for\s+each\s+row/);
+    expect(lower).not.toMatch(/before\s+(insert|update\s+or\s+insert|insert\s+or\s+update)/);
+    expect(lower).toMatch(/ordering only/);
+    expect(lower).toMatch(/not\s+that\s+forbidden\s+hardening/);
+    expect(lower).toMatch(/grant\s+select,\s*insert,\s*update\s+on\s+table\s+public\.tasks\s+to\s+anon;/);
+    expect(lower.match(/create\s+policy/g)).toHaveLength(3);
+    expect(lower).not.toMatch(/for\s+delete/);
+  });
+
   it("keeps local credentials ignored and real credentials out of source", () => {
     expect(read(".gitignore")).toMatch(/^\.env\.local$/m);
     expect(exists(".env.example")).toBe(true);

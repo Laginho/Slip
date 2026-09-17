@@ -22,7 +22,12 @@ copy with the newer `updatedAt` wins.
 - **Every task carries `updatedAt`.** It is the entire conflict-resolution mechanism.
 - **Concurrent edits to the same task lose one side silently.** Accepted: one person
   cannot be on two devices at once. If the app ever gains a second user, this breaks
-  and the decision has to be revisited — not patched.
+  and the decision has to be revisited — not patched. *Narrowed 2026-09-17 (SLIP-45):
+  the newer-stamp rule is now also enforced at the server for ordering — a
+  `BEFORE UPDATE` trigger on `public.tasks` drops a write whose `updatedAt` is strictly
+  older than the stored row, so a newer write can no longer be lost to a stale one
+  landing later. What is still lost is the older side, and an exact-stamp tie, which the
+  server does not break; the clients' `winner()` does.*
 - **No CRDTs, no operation log, no per-field diffing.** These solve a problem this app
   does not have. Whole-document sync is only viable because the dataset is tiny; if it
   ever grows past a few thousand tasks, revisit.

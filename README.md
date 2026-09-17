@@ -58,6 +58,10 @@ repository secrets, and enable GitHub Pages. `bash scripts/setup-publish.sh` wal
 through the schema, the two values and the repository secrets; enabling Pages is the one
 step you do by hand.
 
+**Already deployed?** `supabase/schema.sql` is idempotent: re-run the whole file in the
+SQL editor after pulling, so an existing project picks up the `tasks_reject_stale`
+trigger (server-side refusal of stale writes, SLIP-45). Data is untouched.
+
 **Nightly backup (optional).** `.github/workflows/dump.yml` runs nightly and dumps the
 `tasks` table if you set a `SUPABASE_DB_URL` repository secret; without it the job exits
 doing nothing. Restore a dump with:
