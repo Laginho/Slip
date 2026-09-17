@@ -1,7 +1,7 @@
 # SLIP-40: `storedConfig()` trusts whatever `sync/v1` holds
 
 **Status:** claimed
-**Stage:** implementing
+**Stage:** to-review
 **Type:** fix
 **Blocked by:** none
 **Review:** agent
