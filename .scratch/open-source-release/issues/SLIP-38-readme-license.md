@@ -16,7 +16,7 @@ the one-line `psql` restore; a note that tickets, specs and ADRs live in-repo (`
 before the build can deploy: they are optional and only bake a key into a self-hosted build.
 English.
 
-Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0003; `PRODUCT.md`;
+Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0004; `PRODUCT.md`;
 `README.md` as it stands.
 
 **Blocked by:** SLIP-35, SLIP-36, SLIP-37, SLIP-39 (the README describes the first three as shipped, and it points strangers at the public URL, which SLIP-39 makes render).
@@ -24,7 +24,7 @@ Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0003; 
 - [x] `LICENSE` present, MIT, correct name and year; `package.json` has the license field
 - [x] README sections in the order above; every command in it runs as written
 - [x] Deploy section no longer claims the secrets are required
-- [x] No claim in the README contradicts ADR 0001, ADR 0003 or `CONTEXT.md`
+- [x] No claim in the README contradicts ADR 0001, ADR 0004 or `CONTEXT.md`
 
 ## Primary files
 
@@ -47,7 +47,7 @@ Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0003; 
    (`bash scripts/setup-publish.sh`, `psql`) are checked by hand in stage 3, not by this test.
 
 Not tested: README section order (prose structure; any harmless reorganisation would break it
-without protecting anything) and the "no claim contradicts ADR 0001/0003/CONTEXT.md" criterion
+without protecting anything) and the "no claim contradicts ADR 0001/0004/CONTEXT.md" criterion
 (stage 3 reads for it).
 
 ## Comments
@@ -87,7 +87,7 @@ README's `psql` restore matches what `dump.yml` produces (`--no-owner --data-onl
 --table=public.tasks`, `tasks-$(date -u +%F).sql`); `dump.yml` does exit 0 doing nothing
 without `SUPABASE_DB_URL`; the Deploy section's CI list matches `pages.yml` and its Node 22
 claim matches `node-version: "22"`; `https://laginho.github.io/Slip/` returns 200 against
-`base: "/Slip/"`. Criterion 4 read against ADR 0001, ADR 0003 and `CONTEXT.md`: no conflict —
+`base: "/Slip/"`. Criterion 4 read against ADR 0001, ADR 0004 and `CONTEXT.md`: no conflict —
 "no accounts", the Task shape and the Archive definition all match.
 
 **Two corrections, both inside `README.md`, neither needing a new test:**
