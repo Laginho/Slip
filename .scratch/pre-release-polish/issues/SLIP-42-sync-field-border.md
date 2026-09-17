@@ -1,7 +1,7 @@
 # SLIP-42: The Sync row's inputs draw a field box DESIGN.md forbids
 
-**Status:** ready-for-agent
-**Stage:** to-implement
+**Status:** claimed
+**Stage:** to-review
 **Type:** docs
 **Blocked by:** none
 **Review:** agent

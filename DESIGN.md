@@ -160,8 +160,10 @@ via fixed positioning alone, not elevation effects.
 Rounded rectangles everywhere, one radius family: 10px on Cards and notifications;
 the fully-round 999px pill is the composer while it holds one line (26px once it
 grows). The Kind dot and the option circles inside its pop-up are fully round too, at
-28px. Inputs are bare (no visible field box) — focus lives in the composition, not a
-border.
+28px. The Capture pill's input is bare (no visible field box) — focus lives in the
+composition, not a border. That rule is about the composer and does not generalise: an
+input outside it, having no composition to live in, may carry a hairline and an 8px
+radius. The only one is ADR 0004's Sync row inside the Archive.
 
 ## Components
 
