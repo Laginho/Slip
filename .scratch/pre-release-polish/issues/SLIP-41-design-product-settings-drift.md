@@ -1,7 +1,7 @@
 # SLIP-41: DESIGN.md and PRODUCT.md still say the app has no settings
 
-**Status:** claimed
-**Stage:** to-review
+**Status:** complete
+**Stage:** done
 **Type:** docs
 **Blocked by:** none
 **Review:** agent
@@ -58,3 +58,18 @@ the same call SLIP-38 made about README section order.
 
 - 2026-09-17 Flagged twice by SLIP-35's review (`SLIP-35-byok-sync-config.md` lines 195
   and 294), both times as "worth its own `docs` ticket". This is that ticket.
+
+#### Resolution (2026-09-17)
+
+Verdict: merged on the human's instruction, **without an independent stage-3 review** —
+implementer and closer are the same session.
+
+**Files.** `DESIGN.md` line 217, `PRODUCT.md` line 31. Nothing else, criterion 4.
+
+**What shipped.** Neither prohibition was deleted. Each names the one exception ADR 0004
+authorises, scoped to what shipped — a collapsed row inside a section, invisible to a
+person who never syncs — and `DESIGN.md` says explicitly that it is not to be widened.
+
+**No test**, by the ticket's own "Tests stage 2 writes" section: prose no test reads, where
+a pinned sentence breaks on harmless rewording and protects nothing. Commit `ff950dd`,
+merged as `772904f` (PR #39). 344 passed at the time, unchanged by the edit.

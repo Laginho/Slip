@@ -1,7 +1,7 @@
 # SLIP-40: `storedConfig()` trusts whatever `sync/v1` holds
 
-**Status:** claimed
-**Stage:** to-review
+**Status:** complete
+**Stage:** done
 **Type:** fix
 **Blocked by:** none
 **Review:** agent
@@ -64,3 +64,28 @@ needs no second copy here once the validator is shared.
 - 2026-09-17 Raised four times by SLIP-35's review passes
   (`SLIP-35-byok-sync-config.md` lines 91, 129, 203, 222), each recording it as stage 1's
   call and correctly declining to fold it in. This ticket is that fold-in.
+
+#### Resolution (2026-09-17)
+
+Verdict: merged on the human's instruction, **without an independent stage-3 review** —
+the session that implemented it is the session that closed it. Recorded here because the
+loop requires a reviewer that did not implement, and this ticket did not get one. SLIP-43's
+audit reads this code with fresh eyes; that is the real check.
+
+**Files.** `src/sync.ts`, `src/sync.test.ts`. Exactly the Primary files.
+
+**What shipped.** The URL and privileged-key rules moved out of `saveConfig` into
+`refuse()`, called by `saveConfig` on the way in and `storedConfig` on the way out — one
+copy, criterion 4. A refused stored pair now falls through to env exactly as a blank field
+already did.
+
+**Red → green.** Red `c33594e`, tests only per `git diff --stat`: 4 failed | 33 passed in
+`src/sync.test.ts`, each because `config()` returned the stored pair. Green `9bbd44d`
+touches no test file. Merged as `db9ecb2` (PR #38).
+
+**Gates on merged `main`:** `npm test` 15 files / 348 tests · `npx tsc -b` 0 ·
+`npm run lint` 0 · `npm run build` 0.
+
+**Not done:** no browser pass. The four cases are unit-level and `Archive.tsx` is
+untouched, but this ticket does sit on the live sync path — flagged to the human before
+merge and accepted.
