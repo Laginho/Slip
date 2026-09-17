@@ -1,7 +1,7 @@
 # SLIP-42: The Sync row's inputs draw a field box DESIGN.md forbids
 
-**Status:** claimed
-**Stage:** to-review
+**Status:** complete
+**Stage:** done
 **Type:** docs
 **Blocked by:** none
 **Review:** agent
@@ -53,3 +53,22 @@ passes already saw.
 - 2026-09-17 Answered by the human: amend `DESIGN.md`, do not touch `Archive.tsx`. The
   ticket changes `Type:` from `fix` to `docs` and its Primary files accordingly — there is
   no longer any source in play. `needs-info` → `ready-for-agent`.
+
+#### Resolution (2026-09-17)
+
+Verdict: merged on the human's instruction, **without an independent stage-3 review** —
+implementer and closer are the same session.
+
+**Files.** `DESIGN.md` line 163 only. `git status src/` empty on the branch — criterion 4.
+
+**What shipped.** The bare-input rule now binds the composer in its original words, and
+says an input outside it may carry a hairline and an 8px radius, naming ADR 0004's Sync
+row as the only one. `src/components/Archive.tsx` untouched, so the rendered app is
+byte-for-byte what three review passes already saw.
+
+**No browser pass**, deliberately: the answer changes no pixel. Commit `670f99b`, merged
+as `6e33613` (PR #40). 344 passed, unchanged.
+
+**The decision itself** was the human's, taken on 2026-09-17 from the three options this
+ticket laid out. An agent guessing a fourth time is exactly what the `needs-info` status
+existed to prevent.
