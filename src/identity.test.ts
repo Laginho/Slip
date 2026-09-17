@@ -23,13 +23,15 @@ describe("identity — rename to Slip + portrait lock", () => {
     expect(cfg).toMatch(/orientation\s*:\s*["']portrait["']/);
   });
 
-  // Row 3 — GREEN guard: base/start_url/scope/navigateFallback unchanged
-  it("vite config base, start_url, scope, navigateFallback still /slip/ forms", () => {
+  // Row 3 — guard: base/start_url/scope/navigateFallback pinned to the repo's casing.
+  // SLIP-31 wrote this row to hold the casing still while it changed branding; SLIP-39
+  // flipped all four to /Slip/, the path GitHub Pages actually serves this repo under.
+  it("vite config base, start_url, scope, navigateFallback still /Slip/ forms", () => {
     const cfg = read("vite.config.ts");
-    expect(cfg).toMatch(/base\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/start_url\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/scope\s*:\s*["']\/slip\/["']/);
-    expect(cfg).toMatch(/navigateFallback\s*:\s*["']\/slip\/index\.html["']/);
+    expect(cfg).toMatch(/base\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/start_url\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/scope\s*:\s*["']\/Slip\/["']/);
+    expect(cfg).toMatch(/navigateFallback\s*:\s*["']\/Slip\/index\.html["']/);
   });
 
   // Row 4 — RED: title currently "Tasks"

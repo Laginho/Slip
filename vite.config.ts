@@ -21,7 +21,7 @@ const themeColor: Plugin = {
 };
 
 export default defineConfig({
-  base: "/slip/",
+  base: "/Slip/",
   plugins: [
     react(),
     themeColor,
@@ -32,8 +32,8 @@ export default defineConfig({
         name: "Slip",
         short_name: "Slip",
         lang: "pt-BR",
-        start_url: "/slip/",
-        scope: "/slip/",
+        start_url: "/Slip/",
+        scope: "/Slip/",
         display: "standalone",
         orientation: "portrait",
         background_color: SURFACE,
@@ -51,7 +51,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
-        navigateFallback: "/slip/index.html",
+        navigateFallback: "/Slip/index.html",
       },
     }),
   ],

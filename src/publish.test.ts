@@ -60,19 +60,19 @@ afterAll(() => {
 });
 
 describe("publish — GitHub Pages, PWA, and sync", () => {
-  it("builds every public asset under /slip/", () => {
+  it("builds every public asset under /Slip/", () => {
     const html = fs.readFileSync(path.join(buildDir, "index.html"), "utf-8");
-    expect(html).toContain("/slip/");
+    expect(html).toContain("/Slip/");
     expect(html).not.toMatch(/(?:href|src)="\/(?:assets|manifest|icon-|apple-touch-icon|registerSW|sw\.js|workbox)/);
   });
 
-  it("builds a standalone manifest and service worker for /slip/", () => {
+  it("builds a standalone manifest and service worker for /Slip/", () => {
     const manifest = JSON.parse(
       fs.readFileSync(path.join(buildDir, "manifest.webmanifest"), "utf-8"),
     ) as { start_url: string; scope: string; display: string; icons: { sizes: string }[] };
 
-    expect(manifest.start_url).toBe("/slip/");
-    expect(manifest.scope).toBe("/slip/");
+    expect(manifest.start_url).toBe("/Slip/");
+    expect(manifest.scope).toBe("/Slip/");
     expect(manifest.display).toBe("standalone");
     expect(manifest.icons.map(({ sizes }) => sizes)).toEqual(expect.arrayContaining(["192x192", "512x512"]));
     expect(fs.existsSync(path.join(buildDir, "sw.js"))).toBe(true);
