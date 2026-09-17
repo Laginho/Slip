@@ -1,6 +1,6 @@
 # SLIP-45: Enforce the newer-stamp rule at the server boundary
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 **Type:** fix
 **Blocked by:** none
 
@@ -76,7 +76,7 @@ caller — the anon grants and all three policies stay exactly as they are; it o
 `UPDATE` monotonic. Say so in the schema, beside the existing warning, or the next reader
 reverts it on sight.
 
-## Open decisions — this is why the ticket is `needs-triage`
+## Open decisions — resolved 2026-09-17, see Comments
 
 **1. Does the trigger replicate `winner()`'s tie-break, or only the ordering?**
 
@@ -169,3 +169,7 @@ does not take.
   finding 1. Filed by Opus 5 rather than the step-1 model, on the human's direct request.
   Left at `needs-triage` rather than `ready-for-agent` because the two open decisions
   above are genuinely undecided, and an AFK agent would have to guess at both.
+- 2026-09-17 — Triaged by the human. Both recommendations accepted: **(1) ordering only**,
+  the trigger does not replicate `winner()`'s tie-break; **(2) option (a)**, declaration
+  test in `src/publish.test.ts` plus a manual SQL transcript against a disposable Postgres
+  in the PR description, no database in the test path. Moved to `ready-for-agent`.
