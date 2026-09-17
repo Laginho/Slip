@@ -11,7 +11,7 @@ asserting that the workflow references `secrets.VITE_SUPABASE_URL` and
 `secrets.VITE_SUPABASE_ANON_KEY`; any assertion that a missing secret fails the job goes. After merge the user deletes
 the two repository secrets by hand (not the agent's job; note it in the PR description).
 
-Context: `.scratch/open-source-release/spec.md` (Keyless workflow); ADR 0003 (Consequences).
+Context: `.scratch/open-source-release/spec.md` (Keyless workflow); ADR 0004 (Consequences).
 
 **Blocked by:** SLIP-35 (deploying keyless before BYOK exists would cut the author's own sync).
 

@@ -38,3 +38,9 @@ a URL, in history and in server logs).
 - **Accounts stay off the table.** Once people hold their own databases, there is no path
   to migrate them into a hosted one; adding accounts later would be a second product, not
   a feature.
+
+---
+
+Filed as ADR 0003 on 2026-09-15, colliding with the already-accepted
+`0003-derived-open-task-order.md`. Renumbered to 0004 on 2026-09-17; citations written
+before that date may still say "ADR 0003" and mean this one.

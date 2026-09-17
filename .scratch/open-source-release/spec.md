@@ -3,7 +3,7 @@
 Status: ready-for-agent
 
 Grilled and confirmed with the user on 2026-09-15 (`/grill-with-docs`). The decision and its
-rejected alternatives are ADR 0003; read it first. Vocabulary: `/CONTEXT.md` (unchanged —
+rejected alternatives are ADR 0004; read it first. Vocabulary: `/CONTEXT.md` (unchanged —
 Slip remains single-user). ADR 0001 and `supabase/schema.sql` are untouched by this feature.
 
 ## Problem Statement
@@ -18,7 +18,7 @@ Slip is about to be published as an open-source repository. Two things stand in 
    wiring GitHub secrets. The README only documents that path, and there is no LICENSE.
 
 A hosted multi-tenant version (OAuth, per-user RLS) was designed and rejected: it would make
-the author an operator of other people's data. See ADR 0003.
+the author an operator of other people's data. See ADR 0004.
 
 ## Solution
 

@@ -12,7 +12,7 @@ runner image ships `pg_dump`; install `postgresql-client` if it does not), and u
 with `actions/upload-artifact`, `retention-days: 14`. The secret reaches only that step's
 `env:`. No restore automation.
 
-Context: `.scratch/open-source-release/spec.md` (Nightly dump); ADR 0003.
+Context: `.scratch/open-source-release/spec.md` (Nightly dump); ADR 0004.
 
 **Blocked by:** nothing.
 
