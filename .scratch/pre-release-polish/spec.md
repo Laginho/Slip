@@ -25,11 +25,15 @@ times before it became SLIP-40.
 | --- | --- | --- |
 | SLIP-40 `storedConfig()` trusts whatever `sync/v1` holds | fix | SLIP-35 lines 91, 129, 203, 222 |
 | SLIP-41 DESIGN.md and PRODUCT.md still say there are no settings | docs | SLIP-35 lines 195, 294 |
-| SLIP-42 the Sync row's inputs draw a field box DESIGN.md forbids | fix | SLIP-35 line 288 |
+| SLIP-42 the Sync row's inputs draw a field box DESIGN.md forbids | docs | SLIP-35 line 288 |
 | SLIP-43 no audit has seen the release surface | chore | nothing — inferred from file dates |
 
-SLIP-42 is `needs-info`: it has been left as shipped by three review passes because the
-fix requires a design decision, and this pass does not get to guess either.
+SLIP-42 was filed `needs-info` — three review passes had left it as shipped because the
+fix needed a design decision, and this pass did not get to guess either. Answered the same
+day: amend `DESIGN.md`, leave `Archive.tsx` alone. The bare-input rule was written about
+the Capture pill and does not generalise to a settings field, and both code answers cost
+more than the rule is worth (a pill each puts composer shapes in a non-composer; a recessed
+panel needs a surface tone "The Palette Is Law" forbids). It is a `docs` ticket now.
 
 ## Out of scope
 
