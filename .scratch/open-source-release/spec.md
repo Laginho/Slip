@@ -1,6 +1,6 @@
 # Open-source release — bring your own key
 
-Status: ready-for-agent
+Status: complete
 
 Grilled and confirmed with the user on 2026-09-15 (`/grill-with-docs`). The decision and its
 rejected alternatives are ADR 0004; read it first. Vocabulary: `/CONTEXT.md` (unchanged —
