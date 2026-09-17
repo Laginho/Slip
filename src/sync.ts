@@ -25,13 +25,20 @@ export const SYNC_STORAGE_KEY = "sync/v1";
 
 type Config = { url: string; key: string };
 
-/** A stored pair with either field blank is not a pair -- fall through to env. */
+/**
+ * A stored pair with either field blank is not a pair -- fall through to env. Neither is
+ * one `saveConfig` would have refused: the Sync row is not the only way bytes reach
+ * `sync/v1` (devtools, an extension, a pair written before this rule existed), and from
+ * here the key goes straight into an `apikey` and a `Bearer` header. Same verdict as a
+ * blank field, so an unusable pair never silently shadows a working env pair.
+ */
 function storedConfig(): Config | null {
   try {
     const raw = localStorage.getItem(SYNC_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<Config>;
     if (!parsed.url || !parsed.key) return null;
+    if (refuse(parsed.url, parsed.key)) return null;
     return { url: parsed.url, key: parsed.key };
   } catch {
     // Corrupt or unreachable storage: as unconfigured as if nothing were stored.
@@ -80,9 +87,12 @@ function isPrivileged(key: string): boolean {
  * blank. Returns a one-line reason when the pair is refused, `null` on success --
  * nothing is ever stored halfway.
  */
-export function saveConfig(url: string, key: string): string | null {
-  if (url === "" && key === "") return write(() => localStorage.removeItem(SYNC_STORAGE_KEY));
-
+/**
+ * The one copy of what makes a pair usable, called on the way in by `saveConfig` and on
+ * the way out by `storedConfig`. Returns the one-line reason the Sync row shows, or
+ * `null` when the pair is fine. A second copy of these rules is what would drift.
+ */
+function refuse(url: string, key: string): string | null {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -94,8 +104,16 @@ export function saveConfig(url: string, key: string): string | null {
   if (isPrivileged(key)) {
     return "chave privilegiada (service_role / sb_secret_) — use a chave publishable/anon";
   }
+  return null;
+}
 
-  return write(() => localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key })));
+export function saveConfig(url: string, key: string): string | null {
+  if (url === "" && key === "") return write(() => localStorage.removeItem(SYNC_STORAGE_KEY));
+
+  return (
+    refuse(url, key) ??
+    write(() => localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url, key })))
+  );
 }
 
 /**

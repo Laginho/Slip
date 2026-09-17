@@ -150,6 +150,39 @@ describe("config — device pair before env pair", () => {
     vi.stubEnv("VITE_SUPABASE_ANON_KEY", "");
     expect(config()).toBeNull();
   });
+
+  /**
+   * SLIP-40: these seed sync/v1 directly rather than through saveConfig, which is the
+   * whole point -- validation at the field protects nothing on the read side. A pair
+   * saveConfig would have refused is as unconfigured as a pair with a blank field.
+   */
+  const env = { url: "https://example.supabase.co", key: "test-key" };
+
+  it("ignores a stored http: url, falling back to env", () => {
+    localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url: "http://mine.supabase.co", key: "anon-key" }));
+    expect(config()).toEqual(env);
+  });
+
+  it("ignores a stored url that does not parse, falling back to env", () => {
+    localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify({ url: "not a url", key: "anon-key" }));
+    expect(config()).toEqual(env);
+  });
+
+  it("ignores a stored service_role key, falling back to env", () => {
+    localStorage.setItem(
+      SYNC_STORAGE_KEY,
+      JSON.stringify({ url: "https://mine.supabase.co", key: "service_role-secret" }),
+    );
+    expect(config()).toEqual(env);
+  });
+
+  it("ignores a stored sb_secret_ key, falling back to env", () => {
+    localStorage.setItem(
+      SYNC_STORAGE_KEY,
+      JSON.stringify({ url: "https://mine.supabase.co", key: "sb_secret_abc123" }),
+    );
+    expect(config()).toEqual(env);
+  });
 });
 
 describe("saveConfig — validate and store the device pair", () => {
