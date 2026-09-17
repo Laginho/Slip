@@ -14,7 +14,7 @@ configuring Supabase lets the same list converge between devices.
 Open [`https://laginho.github.io/Slip/`](https://laginho.github.io/Slip/) in Chrome or
 Edge and install it as a PWA (the browser's install prompt, or "Add to Home screen" on
 Android). The public build ships keyless: it works fully offline with nobody's tasks in
-it until you add sync below.
+it until you add sync below. The interface is in Brazilian Portuguese throughout.
 
 ## Run locally
 
@@ -45,8 +45,9 @@ npm run build
 
 Slip works fully offline; sync is optional and configured per device.
 
-**Option A — paste a key.** Open the Archive and use the Sync row: paste the URL and
-anon (or publishable) key of a Supabase project you own. [Create a Supabase
+**Option A — paste a key.** Open the Archive (`ver concluídas`) and use the Sync row
+(`sincronizar`): paste the URL and anon (or publishable) key of a Supabase project you
+own. [Create a Supabase
 project](https://supabase.com/docs/guides/getting-started) and run `supabase/schema.sql`
 in its SQL editor first. The pair is stored on that device only; clearing both fields
 turns sync back off.
@@ -54,7 +55,8 @@ turns sync back off.
 **Option B — fork and self-host.** Fork the repo, run `supabase/schema.sql` against your
 own Supabase project, set the `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 repository secrets, and enable GitHub Pages. `bash scripts/setup-publish.sh` walks
-through all of it, including the schema and the secrets.
+through the schema, the two values and the repository secrets; enabling Pages is the one
+step you do by hand.
 
 **Nightly backup (optional).** `.github/workflows/dump.yml` runs nightly and dumps the
 `tasks` table if you set a `SUPABASE_DB_URL` repository secret; without it the job exits

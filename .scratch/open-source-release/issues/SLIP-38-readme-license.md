@@ -1,7 +1,7 @@
 # SLIP-38: README covers both sync paths; MIT LICENSE
 
-**Status:** ready-for-agent
-**Stage:** to-review
+**Status:** complete
+**Stage:** to-merge
 **Type:** docs
 
 **What to build:** `LICENSE` with the MIT text, "Bruno Lage", 2026, and `"license": "MIT"` in
@@ -21,10 +21,10 @@ Context: `.scratch/open-source-release/spec.md` (README and LICENSE); ADR 0003; 
 
 **Blocked by:** SLIP-35, SLIP-36, SLIP-37, SLIP-39 (the README describes the first three as shipped, and it points strangers at the public URL, which SLIP-39 makes render).
 
-- [ ] `LICENSE` present, MIT, correct name and year; `package.json` has the license field
-- [ ] README sections in the order above; every command in it runs as written
-- [ ] Deploy section no longer claims the secrets are required
-- [ ] No claim in the README contradicts ADR 0001, ADR 0003 or `CONTEXT.md`
+- [x] `LICENSE` present, MIT, correct name and year; `package.json` has the license field
+- [x] README sections in the order above; every command in it runs as written
+- [x] Deploy section no longer claims the secrets are required
+- [x] No claim in the README contradicts ADR 0001, ADR 0003 or `CONTEXT.md`
 
 ## Primary files
 
@@ -59,3 +59,48 @@ without protecting anything) and the "no claim contradicts ADR 0001/0003/CONTEXT
   "runs as written"). README section order stays untested: it is prose structure and the
   test would only break on harmless edits. Primary files and "Tests stage 2 writes" are now
   written above so the seams are pre-confirmed. Stage back to `to-implement`; resume attempt 2.
+
+#### Resolution (2026-09-17)
+
+Verdict: Approve. PR [#34](https://github.com/Laginho/Slip/pull/34) waits for the human read
+because stage 3 committed code — `docs/agents/orchestration.md` merges straight through only
+when step 3 changed nothing. Implement sonnet, review opus.
+
+**Files.** `LICENSE` (new), `package.json` (`license` field), `README.md`,
+`src/repo-metadata.test.ts` (new). Exactly the Primary files; nothing outside them.
+
+**Red → green.** Red commit `e68705e`, tests only per `git diff --stat`, plus `3230537`,
+which tightened the npm-script guard (it had excluded `test`, a real script key) before any
+code landed — the implementer's own test in its own test commit, not a neighbour's, so no
+block. At that tree three of the four cases fail for the reasons the matrix names: no
+`license` key, no `LICENSE` file, and `README.md` still carrying "Before the build can
+deploy, configure". Case 4 is green by design, a standing guard. Green commit `a795faa`
+touches no test file.
+
+**Gates** (repo root, branch `slip-38`): `npm test` 15 files / 344 tests passed;
+`npx tsc -b` 0; `npx tsc --noEmit` 0 (the command the README itself prints); `npm run lint`
+0; `npm run build` 0, `dist/` written, PWA precache 12 entries.
+
+**Checked by hand**, since the suite cannot: `scripts/setup-publish.sh`,
+`supabase/schema.sql`, `.env.example` and `.github/workflows/dump.yml` all exist; the
+README's `psql` restore matches what `dump.yml` produces (`--no-owner --data-only
+--table=public.tasks`, `tasks-$(date -u +%F).sql`); `dump.yml` does exit 0 doing nothing
+without `SUPABASE_DB_URL`; the Deploy section's CI list matches `pages.yml` and its Node 22
+claim matches `node-version: "22"`; `https://laginho.github.io/Slip/` returns 200 against
+`base: "/Slip/"`. Criterion 4 read against ADR 0001, ADR 0003 and `CONTEXT.md`: no conflict —
+"no accounts", the Task shape and the Archive definition all match.
+
+**Two corrections, both inside `README.md`, neither needing a new test:**
+
+1. Option B claimed `setup-publish.sh` "walks through all of it" right after a list that
+   ends in "enable GitHub Pages". The script has three stages — schema, capture URL and
+   key, write `.env.local` plus the two GitHub secrets — and never touches Pages. Reworded
+   to name what it covers and leave Pages as the manual step.
+2. `PRODUCT.md` records "Interface language is Brazilian Portuguese throughout", and the
+   README is English by ticket. A stranger following option A looked for "Archive" and
+   "Sync"; the screen reads `ver concluídas` and `sincronizar`. Added the language note to
+   Install and the real labels to option A.
+
+**For the next ticket that writes user-facing docs:** the UI is Portuguese and the README is
+English. Any instruction that names an on-screen control has to carry the Portuguese label,
+because no test in this repo can catch a README pointing at a word the app never shows.
