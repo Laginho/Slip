@@ -1,64 +1,31 @@
-# SLIP-43: No audit has seen the release surface
+# SLIP-43: No audit has seen the release surface — withdrawn
 
-**Status:** ready-for-agent
-**Stage:** to-implement
+**Status:** wontfix
+**Stage:** done
 **Type:** chore
-**Blocked by:** SLIP-40, SLIP-41, SLIP-42 (auditing before the known findings are fixed
-spends the audit rediscovering them; SLIP-42 may stay open if the human prefers, and then
-the audit records the border as a known deviation instead)
-**Review:** human
 
-- Primary files:
-  - `docs/audits/<date>-<sha>.md` (new; the existing audits are dated records and are
-    never edited)
+Withdrawn on 2026-09-17, the day it was filed, without being worked.
 
-#### What to build
+The ticket described how to audit the repo. That was wrong: auditing is a whole separate
+process owned by the `/audit` skill, and the ticket improvised a five-surface checklist of
+its own instead of pointing at it. Left in place it would have invited a future session to
+follow the improvisation rather than run the real thing.
 
-The newest audit is `docs/audits/2026-09-11-911cdb3.md`. Everything that makes this repo
-publishable landed after it:
+The observation underneath it stands and needs no ticket: `docs/audits/` stops at
+`2026-09-11-911cdb3.md`, while everything that makes this repo publishable — SLIP-35
+through SLIP-42 — landed between 15 and 17 September. The next `/audit` run is the first
+to read the release surface.
 
-| Ticket | Landed | What it changed |
-| --- | --- | --- |
-| SLIP-35 | 2026-09-15 | BYOK: `sync/v1`, `saveConfig`, the Archive's Sync row |
-| SLIP-36 | 2026-09-15 | Keyless Pages workflow; the required-secrets gate removed |
-| SLIP-37 | 2026-09-15 | `.github/workflows/dump.yml`, the nightly `pg_dump` |
-| SLIP-39 | 2026-09-16 | `base: "/Slip/"` — the deployed app had never rendered |
-| SLIP-38 | 2026-09-17 | `LICENSE`, the README a stranger actually reads |
+## Why this file still exists
 
-So no audit has ever read the code a stranger will read, and the one deploy-breaking bug
-this repo has shipped (SLIP-39) was found by a human opening the URL, not by a gate.
+Only to keep the number burned. `docs/agents/issue-tracker.md` derives the next ticket id
+from the tracker itself:
 
-Run the repo's audit over `main` at its then-current SHA and write the record in the shape
-the existing files use. The surfaces that have never been audited and that a public release
-puts in front of strangers, in rough order of what a mistake would cost:
+    ls .scratch/*/issues/ | grep -o 'SLIP-[0-9]*' | sort -V | tail -1
 
-1. The key path end to end — `saveConfig`, `storedConfig`, `headers`, and what reaches
-   `localStorage` versus what reaches a request.
-2. `supabase/schema.sql` and its policies, read as "a stranger runs this against their own
-   project": what the anon key can do to a table it owns.
-3. The two workflows as a fork sees them — `pages.yml` keyless, `dump.yml` with and
-   without `SUPABASE_DB_URL`, and what either can leak into a public log.
-4. `scripts/setup-publish.sh` against its own guards, since it now handles other people's
-   credentials and its Portuguese warnings sit under an English README.
-5. Documentation against shipped behaviour, now that `README.md`, `PRODUCT.md`,
-   `DESIGN.md`, `CONTEXT.md` and four ADRs all describe the same app to different readers.
+Delete this file and that prints `SLIP-42`, so the next ticket becomes a second SLIP-43 —
+while this one is already cited in `git log`, in PRs #37 and #41, and in this directory's
+spec. The convention says an id is "never reused"; this is what enforces it. The repo
+spent a cycle on exactly this failure with two ADRs numbered 0003.
 
-#### Acceptance criteria
-
-1. A new `docs/audits/<date>-<sha>.md` naming the SHA it read.
-2. Every surface above either reported on or explicitly recorded as checked and clean —
-   the existing audits' "Checked and *not* reported" convention.
-3. Each finding carries a severity and the file and line it lives at.
-4. Findings become their own tickets; the audit file itself fixes nothing.
-
-#### Verification
-
-    npm test && npx tsc -b && npm run lint && npm run build
-
-Gates prove the tree the audit read was green, not that the audit is right.
-
-## Comments
-
-- 2026-09-17 Raised while checking whether the repo was ready for pre-release polish.
-  Nothing in the tracker recorded the audit gap — it is visible only by comparing
-  `docs/audits/` filenames against the dates of the SLIP-35..39 commits.
+Nothing here is open work: `wontfix` is closed by the tracker's own definition.
