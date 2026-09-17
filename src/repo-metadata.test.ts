@@ -33,7 +33,7 @@ describe("repo metadata — SLIP-38 license + README", () => {
     const pkg = JSON.parse(read("package.json"));
     const mentioned = new Set<string>();
     for (const m of readme.matchAll(/npm (?:run )?([a-z:-]+)/g)) {
-      if (m[1] !== "test" && m[1] !== "ci") mentioned.add(m[1]);
+      if (m[1] !== "ci") mentioned.add(m[1]);
     }
     expect(mentioned.size).toBeGreaterThan(0);
     for (const script of mentioned) {
