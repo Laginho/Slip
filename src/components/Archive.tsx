@@ -72,12 +72,13 @@ const FORM: CSSProperties = {
 
 /**
  * SLIP-35: BYOK. Collapsed, in the style of the "ver concluídas" link, until
- * clicked; then two inputs and a Save button, in place -- no route, no modal.
+ * clicked; then setup help or the existing credentials form, in place -- no route, no modal.
  * saveConfig() owns the storage key, the URL/privileged-key validation and the
  * both-fields-empty removal; this row only reports what it returned.
  */
 function SyncRow() {
   const [expanded, setExpanded] = useState(false);
+  const [showCredentials, setShowCredentials] = useState(false);
   const [url, setUrl] = useState("");
   const [key, setKey] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -92,8 +93,33 @@ function SyncRow() {
     );
   }
 
+  if (!showCredentials) {
+    return (
+      <div style={FORM}>
+        <p style={{ margin: 0, fontSize: 14, textAlign: "center" }}>
+          sincronizar é opcional. use seu próprio projeto Supabase para ter a mesma lista em outros dispositivos.
+        </p>
+        <button type="button" style={{ ...LINK, minHeight: 44 }} onClick={() => setShowCredentials(true)}>
+          já tenho um projeto
+        </button>
+        <a
+          href="https://github.com/Laginho/Slip/blob/main/docs/setup.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ ...LINK, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+          aria-label="preciso configurar (abre o tutorial em outra aba)"
+        >
+          preciso configurar
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div style={FORM}>
+      <button type="button" style={{ ...LINK, minHeight: 44 }} onClick={() => setShowCredentials(false)}>
+        voltar
+      </button>
       <input
         type="text"
         value={url}

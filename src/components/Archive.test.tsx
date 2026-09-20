@@ -41,6 +41,27 @@ function saveButton(container: HTMLElement): HTMLButtonElement {
 }
 
 describe("Sync row — zero Done Tasks", () => {
+  it("offers optional setup help and preserves entered credentials when returning to the choices", async () => {
+    const container = await render(
+      <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
+    );
+    await click(syncToggle(container));
+    expect(container.textContent).toContain("opcional");
+    expect(urlInput(container)).toBeNull();
+    const help = [...container.querySelectorAll("a")].find((link) => link.textContent === "preciso configurar");
+    expect(help?.getAttribute("href")).toBe("https://github.com/Laginho/Slip/blob/main/docs/setup.md");
+    expect(help?.target).toBe("_blank");
+    const chooseCredentials = () => [...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!;
+    await click(chooseCredentials());
+    typeInto(urlInput(container), "https://mine.supabase.co");
+    typeInto(keyInput(container), "anon-key");
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "voltar")!);
+    expect(urlInput(container)).toBeNull();
+    await click(chooseCredentials());
+    expect(urlInput(container).value).toBe("https://mine.supabase.co");
+    expect(keyInput(container).value).toBe("anon-key");
+  });
+
   it("is the only thing an empty Archive shows", async () => {
     const container = await render(
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
@@ -63,6 +84,7 @@ describe("Sync row — zero Done Tasks", () => {
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
     );
     await click(syncToggle(container));
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!);
     expect(urlInput(container)).toBeTruthy();
     expect(keyInput(container)).toBeTruthy();
     expect(saveButton(container)).toBeTruthy();
@@ -96,6 +118,7 @@ describe("Sync row — Save", () => {
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
     );
     await click(syncToggle(container));
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!);
     typeInto(urlInput(container), "https://mine.supabase.co");
     typeInto(keyInput(container), "anon-key");
     await click(saveButton(container));
@@ -112,6 +135,7 @@ describe("Sync row — Save", () => {
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
     );
     await click(syncToggle(container));
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!);
     typeInto(urlInput(container), "http://mine.supabase.co");
     typeInto(keyInput(container), "anon-key");
     await click(saveButton(container));
@@ -127,6 +151,7 @@ describe("Sync row — Save", () => {
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
     );
     await click(syncToggle(container));
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!);
     typeInto(urlInput(container), "https://mine.supabase.co");
     typeInto(keyInput(container), "service_role-abc");
     await click(saveButton(container));
@@ -144,6 +169,7 @@ describe("Sync row — Save", () => {
       <Archive tasks={[]} now={NOW} open={false} onToggle={() => {}} />,
     );
     await click(syncToggle(container));
+    await click([...container.querySelectorAll("button")].find((button) => button.textContent === "já tenho um projeto")!);
     await click(saveButton(container));
 
     expect(localStorage.getItem(SYNC_STORAGE_KEY)).toBeNull();
