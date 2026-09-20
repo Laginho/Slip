@@ -1,85 +1,103 @@
 # Slip
 
-Slip is a local-first personal task tracker. Success is measured in seconds-to-captured:
-type into a chat-style bar, press Enter, done. The list on your phone and the list on
-your desktop are one list, converged by background sync.
+Sua lista pessoal de tarefas, sem cadastro. Escreva, envie e volte ao que estava fazendo.
 
-There are no accounts, no projects, and no settings screen to get through first. A Task
-has just text, an optional deadline, and a kind (work, college, or chore); urgency is
-shown by colour, derived automatically, never chosen by hand. It works without Supabase;
-configuring Supabase lets the same list converge between devices.
+**[Abrir o Slip](https://laginho.github.io/Slip/)** · **[Configurar sincronização entre dispositivos](docs/setup.md)**
 
-## Install
+## Começar a usar
 
-Open [`https://laginho.github.io/Slip/`](https://laginho.github.io/Slip/) in Chrome or
-Edge and install it as a PWA (the browser's install prompt, or "Add to Home screen" on
-Android). The public build ships keyless: it works fully offline with nobody's tasks in
-it until you add sync below. The interface is in Brazilian Portuguese throughout.
+1. Abra o Slip no navegador.
+2. Escreva uma tarefa na barra de entrada e envie.
+3. Marque a tarefa como concluída quando terminar. Ela continua disponível em **ver concluídas**.
 
-## Run locally
+Você pode definir um prazo e escolher entre trabalho, faculdade e afazeres. As cores indicam a urgência automaticamente. A interface está em português brasileiro.
 
-Use Node.js 22, the version used by deployment CI.
+O Slip guarda as tarefas no navegador e funciona offline após o carregamento inicial. **Não é necessário configurar Supabase para começar.** Sem sincronização, a lista fica nesse navegador: limpar os dados do site pode apagar sua única cópia.
+
+## Instalar como aplicativo
+
+O Slip pode ser instalado como PWA: um app aberto a partir de um ícone, sem precisar manter uma aba visível. No navegador, procure a opção de instalar o site ou adicionar à tela inicial. O nome e a disponibilidade dessa opção dependem do navegador e do dispositivo. Usar pelo navegador também funciona.
+
+## Usar a mesma lista no celular e no computador
+
+A sincronização é opcional. Você cria um projeto pessoal no Supabase e informa a URL e a chave publishable (ou anon) no Slip de cada dispositivo.
+
+**[Siga o tutorial de configuração passo a passo](docs/setup.md)** — inclui preparação do banco, localização da chave, teste entre aparelhos e solução de problemas. Não exige terminal, programação nem uma cópia deste repositório.
+
+O Slip não oferece contas nem um banco compartilhado administrado pelo autor. Cada pessoa usa seu próprio projeto. **Quem tiver a URL e a chave desse projeto poderá ler e alterar suas tarefas**; não publique esses valores. Nunca informe chaves administrativas `service_role` ou `sb_secret_` no app.
+
+## Desenvolvimento local
+
+Os passos abaixo são para quem deseja modificar o código ou hospedar uma versão própria.
+
+Requisito: Node.js 22, também usado no CI.
 
 ```sh
+git clone https://github.com/Laginho/Slip.git
+cd Slip
 npm ci
 npm run dev
 ```
 
-Open the local Vite URL shown in the terminal. To enable sync, copy `.env.example` to
-`.env.local` and supply `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Keep
-`.env.local` private; the app remains usable when both values are unset.
+Abra o endereço exibido pelo Vite. O projeto usa React, TypeScript e Vite.
 
-## Test and build
+Para sincronizar no desenvolvimento, siga a preparação do banco no [tutorial](docs/setup.md). Configure a URL e a chave pela interface, ou copie `.env.example` para `.env.local` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Apesar do nome da variável, a chave publishable também é aceita. Não versione `.env.local`.
+
+A configuração salva no navegador tem precedência sobre as variáveis do build. Sem uma configuração completa, o app funciona localmente.
+
+## Validar e gerar o build
 
 ```sh
 npm test
 npm run lint
-npx tsc --noEmit
+npx tsc -b
 npm run build
 ```
 
-`npm run build` writes the production site to `dist/`. Preview that build with
-`npm run preview`.
+O build fica em `dist/`. Para conferi-lo localmente:
 
-## Sync
+```sh
+npm run preview
+```
 
-Slip works fully offline; sync is optional and configured per device.
+## Hospedar uma versão própria
 
-**Option A — paste a key.** Open the Archive (`ver concluídas`) and use the Sync row
-(`sincronizar`): paste the URL and anon (or publishable) key of a Supabase project you
-own. [Create a Supabase
-project](https://supabase.com/docs/guides/getting-started) and run `supabase/schema.sql`
-in its SQL editor first. The pair is stored on that device only; clearing both fields
-turns sync back off.
+O GitHub Actions publica no GitHub Pages após um push em `main` ou uma execução manual do workflow. Antes de publicar, executa auditoria de dependências, testes, lint, verificação de tipos e build.
 
-**Option B — fork and self-host.** Fork the repo, run `supabase/schema.sql` against your
-own Supabase project, set the `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-repository secrets, and enable GitHub Pages. `bash scripts/setup-publish.sh` walks
-through the schema, the two values and the repository secrets; enabling Pages is the one
-step you do by hand.
+1. Faça um fork deste repositório.
+2. Configure GitHub Pages para publicar usando GitHub Actions.
+3. Execute o workflow de publicação e consulte o endereço informado pelo GitHub.
 
-**Already deployed?** `supabase/schema.sql` is idempotent: re-run the whole file in the
-SQL editor after pulling, so an existing project picks up the `tasks_reject_stale`
-trigger (server-side refusal of stale writes, SLIP-45). Data is untouched.
+O caminho base e o escopo da PWA estão definidos como `/Slip/` em `vite.config.ts`. Se o nome do repositório ou o caminho de hospedagem mudar, ajuste essas configurações.
 
-**Nightly backup (optional).** `.github/workflows/dump.yml` runs nightly and dumps the
-`tasks` table if you set a `SUPABASE_DB_URL` repository secret; without it the job exits
-doing nothing. Restore a dump with:
+Por padrão, o build é publicado **sem credenciais**: cada pessoa configura o próprio projeto pela interface. Opcionalmente, um fork pode definir os secrets de Actions `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Esses valores serão incluídos no JavaScript público, e quem abrir essa versão poderá acessar a lista configurada. Use essa opção somente compreendendo esse modelo de acesso.
+
+Para uma configuração guiada de desenvolvimento e publicação, execute em um terminal com Bash:
+
+```sh
+bash scripts/setup-publish.sh
+```
+
+O assistente orienta a preparação do banco e dos secrets; a habilitação do Pages é manual. Para o uso comum, prefira o [tutorial sem terminal](docs/setup.md).
+
+## Banco e backup
+
+[`supabase/schema.sql`](supabase/schema.sql) cria a tabela e as permissões da sincronização. O script é idempotente: pode ser executado novamente sem apagar as tarefas. Ao atualizar uma instalação existente, execute o arquivo completo para incluir também o trigger `tasks_reject_stale`, que impede gravações antigas de substituírem versões mais recentes.
+
+Sincronização não é backup. Para forks com backup configurado, [o workflow de dump](.github/workflows/dump.yml) pode exportar a tabela `tasks` diariamente. Ele depende do secret `SUPABASE_DB_URL`; sem esse valor, não realiza o backup. Confira o histórico do workflow e os arquivos gerados para verificar se está funcionando.
+
+Restauração com `psql`, para quem administra o banco:
 
 ```sh
 psql "$SUPABASE_DB_URL" < tasks-2026-01-01.sql
 ```
 
-## Deploy
+Confira o banco de destino e o conteúdo do dump antes de restaurá-lo. A URL de conexão do banco é uma credencial administrativa e não deve ser colocada no app.
 
-GitHub Actions deploys GitHub Pages after a push to `main` (or when run manually). The
-build is keyless: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are optional GitHub
-Actions secrets that only bake a key into a self-hosted fork's build (sync option B
-above). Run `bash scripts/setup-publish.sh` for a guided local and GitHub setup. The
-workflow runs a dependency audit, the test suite, lint, typecheck, and production build
-before publishing `dist`.
+## Contribuir e entender o projeto
 
-## Tickets, specs, and decisions
+Leia [AGENTS.md](AGENTS.md) para o fluxo de contribuição. Tickets e especificações ficam em `.scratch/`, decisões de arquitetura em [`docs/adr/`](docs/adr/) e o vocabulário do projeto em [CONTEXT.md](CONTEXT.md).
 
-This repo tracks its own work in-repo: tickets and specs under `.scratch/`, architecture
-decisions under `docs/adr/`, and vocabulary in `CONTEXT.md`.
+## Licença
+
+[MIT](LICENSE).
