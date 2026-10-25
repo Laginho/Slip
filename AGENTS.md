@@ -23,5 +23,6 @@ one with `**Type:** refactor`.
 
 - Gate: `npm test && npx tsc -b && npm run build`
 - Base branch: `main`
-- Models: stage 1 fable, stage 2 sonnet, stage 3 opus
-- Models (Codex): stage 1 gpt-6-astra, stage 2 gpt-6-sol xhigh, hard sonnet-5.5 high, stage 3 gpt-6-astra high
+- Models (default): sol
+- Models (sol): stage 2 gpt-6.1-sol high, hard gpt-6.1-sol xhigh, stage 3 gpt-6.1-sol xhigh
+- Models (opus): stage 2 opus-5.5 high, hard opus-5.5 xhigh, stage 3 opus-5.5 xhigh
